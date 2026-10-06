@@ -1,0 +1,12 @@
+{ 
+  "expo": { 
+    "name": "AgroBot 2.0", 
+    "slug": "agrobot-2", 
+    "scheme": "agrobot", 
+    "version": "1.0.0", 
+    "orientation": "portrait", 
+    "userInterfaceStyle": "automatic", 
+    "assetBundlePatterns": ["**/*"], 
+    "platforms": ["ios", "android"] 
+  } 
+} 
