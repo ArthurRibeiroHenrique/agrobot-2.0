@@ -39,7 +39,7 @@ AgroBot - Evolucao Agricola, tambem chamado AgroBot 2.0.
 ## Recursos-chave 
  
 - Equipe de desenvolvimento 
-- N8N 
+- Backend proprio em Node.js e TypeScript 
 - Supabase ou PostgreSQL 
 - APIs de voz e IA 
 - Dados agricolas estruturados 

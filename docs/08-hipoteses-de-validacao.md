@@ -9,7 +9,7 @@ Sucesso: o produtor registrar uma atividade sem digitacao manual e sem ajuda.
  
 ## Hipotese 2 
  
-A integracao entre voz, N8N e IA conseguira interpretar termos rurais corretamente. 
+A integracao entre voz, backend e IA conseguira interpretar termos rurais corretamente. 
  
 Teste: usar gravacoes com diferentes sotaques e expressoes agricolas. 
 Sucesso: maioria dos registros extrair produto, quantidade e local corretamente. 

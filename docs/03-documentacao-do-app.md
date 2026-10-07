@@ -38,5 +38,5 @@
 ## Uso offline 
  
 - O aplicativo deve permitir gravacao de audio mesmo sem internet 
-- O audio pode ficar em fila local 
+- O audio fica em fila local persistente, que sobrevive ao fechamento do aplicativo 
 - Quando houver conexao, o aplicativo sincroniza com o servidor 

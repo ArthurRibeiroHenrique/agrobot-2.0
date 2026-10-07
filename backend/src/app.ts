@@ -1,9 +1,11 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
 import { env } from './config/env';
+import { requireAuth } from './middlewares/auth';
+import { errorHandler, notFoundHandler } from './middlewares/error-handler';
 import { healthRouter } from './routes/health.routes';
 import { voiceRouter } from './routes/voice.routes';
 import { activitiesRouter } from './routes/activities.routes';
@@ -24,30 +26,17 @@ export function createApp() {
   app.use(morgan('dev'));
 
   app.use('/health', healthRouter);
-  app.use('/', voiceRouter);
-  app.use('/', activitiesRouter);
 
-  app.use((req, res) => {
-    res.status(404).json({
-      error: 'Rota não encontrada'
-    });
-  });
+  const v1 = express.Router();
 
-  app.use(
-    (
-      err: any,
-      req: Request,
-      res: Response,
-      next: NextFunction
-    ) => {
-      console.error(err);
+  v1.use(requireAuth);
+  v1.use('/', voiceRouter);
+  v1.use('/', activitiesRouter);
 
-      res.status(500).json({
-        error: 'Internal server error',
-        details: err?.message ?? 'Erro desconhecido'
-      });
-    }
-  );
+  app.use('/v1', v1);
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }
