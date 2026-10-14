@@ -27,7 +27,14 @@ Backend:
 Aplicativo:
 
 1. Entrar na pasta mobile
-2. Instalar dependências com `npm install`
-3. Iniciar o Expo com `npx expo start`
+2. Copiar `.env.example` para `.env` e preencher. No celular, a URL da API usa o IP do computador
+   na rede Wi-Fi, não `localhost`
+3. Instalar dependências com `npm install`
+4. Iniciar o Expo com `npx expo start` e abrir no aplicativo Expo Go (celular e computador na mesma rede)
+
+Para o login funcionar, o Supabase precisa enviar o código: por e-mail, o modelo de e-mail
+"Magic Link" deve incluir `{{ .Token }}`; por celular, é preciso configurar um provedor de SMS.
+
+Avaliação da IA: `npm run eval` na pasta backend (ver `backend/eval/README.md`).
 
 As rotas ficam em `http://localhost:3333/v1` e exigem o token do Supabase Auth no header `Authorization`.

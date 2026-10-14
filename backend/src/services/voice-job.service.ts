@@ -4,6 +4,7 @@ import {
   ActivityDraft
 } from '../schemas/activity.schema';
 import { HttpError } from '../utils/http-error';
+import { userOwnsField } from './farm.service';
 
 const UNIQUE_VIOLATION = '23505';
 
@@ -128,6 +129,13 @@ export async function confirmVoiceJob(
 
   const parsedDraft: ActivityDraft = activityDraftSchema.parse(merged);
 
+  if (
+    parsedDraft.field_id &&
+    !(await userOwnsField(userId, parsedDraft.field_id))
+  ) {
+    throw new HttpError(400, 'Talhão não encontrado');
+  }
+
   const { data: activity, error: activityError } = await supabaseAdmin
     .from('activities')
     .insert({
@@ -137,6 +145,7 @@ export async function confirmVoiceJob(
       product: parsedDraft.product,
       quantity: parsedDraft.quantity,
       unit: parsedDraft.unit,
+      field_id: parsedDraft.field_id ?? null,
       field_name: parsedDraft.field_name,
       occurred_at: parsedDraft.occurred_at,
       cost: parsedDraft.cost,
@@ -171,6 +180,7 @@ export async function listActivities(userId: string) {
     .from('activities')
     .select('*')
     .eq('user_id', userId)
+    .order('occurred_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(100);
 

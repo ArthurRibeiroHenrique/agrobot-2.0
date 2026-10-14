@@ -1,6 +1,17 @@
-import React from 'react'; 
-import { Text } from 'react-native'; 
- 
-export function AlertaCarencia(props) { 
-  return React.createElement(Text, null, props.mensagem); 
-} 
+import { StyleSheet, Text } from 'react-native';
+
+import { cores } from '../../lib/constants';
+
+export function AlertaCarencia({ mensagem }: { mensagem: string }) {
+  return <Text style={styles.alerta}>{mensagem}</Text>;
+}
+
+const styles = StyleSheet.create({
+  alerta: {
+    fontSize: 17,
+    color: cores.alerta,
+    backgroundColor: cores.alertaFundo,
+    borderRadius: 12,
+    padding: 14
+  }
+});

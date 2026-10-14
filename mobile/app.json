@@ -1,12 +1,27 @@
-{ 
-  "expo": { 
-    "name": "AgroBot 2.0", 
-    "slug": "agrobot-2", 
-    "scheme": "agrobot", 
-    "version": "1.0.0", 
-    "orientation": "portrait", 
-    "userInterfaceStyle": "automatic", 
-    "assetBundlePatterns": ["**/*"], 
-    "platforms": ["ios", "android"] 
-  } 
-} 
+{
+  "expo": {
+    "name": "AgroBot 2.0",
+    "slug": "agrobot-2",
+    "scheme": "agrobot",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "O AgroBot usa o microfone para registrar suas atividades por voz."
+        }
+      ],
+      "expo-status-bar"
+    ]
+  }
+}

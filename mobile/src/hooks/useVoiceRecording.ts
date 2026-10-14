@@ -1,24 +1,35 @@
-import { useState } from 'react'; 
-import { Audio } from 'expo-av'; 
- 
-export function useVoiceRecording() { 
-  const [gravando, setGravando] = useState(false); 
- 
-  async function iniciar() { 
-    await Audio.requestPermissionsAsync(); 
-    const recording = new Audio.Recording(); 
-    await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY); 
-    await recording.startAsync(); 
-    setGravando(true); 
-    return recording; 
-  } 
- 
-  async function parar(recording) { 
-    if (recording == null) return null; 
-    await recording.stopAndUnloadAsync(); 
-    setGravando(false); 
-    return recording.getURI(); 
-  } 
- 
-  return { gravando, iniciar, parar }; 
-} 
+import { RecordingPresets, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
+import { useCallback } from 'react';
+
+import { pedirPermissaoDeAudio, prepararModoDeGravacao } from '../services/audio';
+
+export function useVoiceRecording() {
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const estado = useAudioRecorderState(recorder, 250);
+
+  const iniciar = useCallback(async (): Promise<boolean> => {
+    const permitido = await pedirPermissaoDeAudio();
+
+    if (!permitido) return false;
+
+    await prepararModoDeGravacao();
+    await recorder.prepareToRecordAsync();
+    recorder.record();
+
+    return true;
+  }, [recorder]);
+
+  // Devolve o caminho do arquivo gravado no aparelho.
+  const parar = useCallback(async (): Promise<string | null> => {
+    await recorder.stop();
+
+    return recorder.uri;
+  }, [recorder]);
+
+  return {
+    gravando: estado.isRecording,
+    duracaoMs: estado.durationMillis,
+    iniciar,
+    parar
+  };
+}

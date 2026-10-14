@@ -1,0 +1,111 @@
+[
+  {
+    "id": "aplicacao-herbicida-ontem",
+    "transcript": "Ontem eu passei vinte litros de glifosato no talhão dois.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "activity_type": "aplicacao",
+      "product": "glifosato",
+      "quantity": 20,
+      "unit": "L",
+      "field_name": "Talhão 2",
+      "occurred_at": "2026-10-06"
+    }
+  },
+  {
+    "id": "plantio-milho-hoje",
+    "transcript": "Hoje plantei milho na baixada, usei três sacos de semente.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "activity_type": "plantio",
+      "product": "milho",
+      "quantity": 3,
+      "unit": "sc",
+      "field_name": "Baixada",
+      "occurred_at": "2026-10-07"
+    }
+  },
+  {
+    "id": "colheita-soja-sacas",
+    "transcript": "Colhi cento e vinte sacas de soja no talhão um anteontem.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "activity_type": "colheita",
+      "product": "soja",
+      "quantity": 120,
+      "unit": "sc",
+      "field_name": "Talhão 1",
+      "occurred_at": "2026-10-05"
+    }
+  },
+  {
+    "id": "adubacao-ureia",
+    "transcript": "Botei duzentos quilos de ureia lá no talhão dois hoje cedo.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "activity_type": "adubacao",
+      "product": "ureia",
+      "quantity": 200,
+      "unit": "kg",
+      "field_name": "Talhão 2",
+      "occurred_at": "2026-10-07"
+    }
+  },
+  {
+    "id": "aplicacao-fungicida-ml",
+    "transcript": "Apliquei quinhentos ml de fungicida no feijão da baixada.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "activity_type": "aplicacao",
+      "product": "fungicida",
+      "quantity": 500,
+      "unit": "mL",
+      "field_name": "Baixada",
+      "occurred_at": "2026-10-07"
+    }
+  },
+  {
+    "id": "custo-diesel",
+    "transcript": "Gastei quatrocentos e cinquenta reais de diesel pro trator ontem.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "activity_type": "custo",
+      "product": "diesel",
+      "field_name": null,
+      "occurred_at": "2026-10-06"
+    }
+  },
+  {
+    "id": "sem-talhao-informado",
+    "transcript": "Passei dez litros de inseticida na lavoura.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "activity_type": "aplicacao",
+      "product": "inseticida",
+      "quantity": 10,
+      "unit": "L",
+      "field_name": null
+    }
+  },
+  {
+    "id": "calcario-toneladas",
+    "transcript": "Segunda-feira joguei duas toneladas de calcário no talhão um.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "activity_type": "adubacao",
+      "product": "calcário",
+      "quantity": 2,
+      "unit": "t",
+      "field_name": "Talhão 1",
+      "occurred_at": "2026-10-05"
+    }
+  }
+]

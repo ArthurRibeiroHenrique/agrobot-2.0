@@ -188,19 +188,32 @@ AgroBot2.0/
 5. Erros internos não são mais devolvidos ao cliente; áudio ausente retorna 400.
 6. Reenvio com o mesmo `client_id` não duplica o registro.
 
-**Backend — pendente**
-1. `occurred_at` é texto e `field_name` é texto livre. Trocar por data real e por referência ao talhão.
-2. A extração usa "modo JSON" livre. Trocar por saída estruturada com o esquema, e enviar o
-   contexto do produtor (talhões e produtos) no prompt.
-3. Tabelas e rotas de propriedades, talhões, produtos, alertas e organizações.
+**Backend — feito na etapa 2**
+1. Propriedades e talhões: tabelas e rotas `GET/POST /farms` e `GET/POST /fields`.
+2. Extração com saída estruturada (esquema Zod), recebendo a data de hoje e os talhões do produtor.
+3. Montagem do rascunho em código (`draft.service.ts`): unidade padronizada, talhão falado ligado ao
+   talhão cadastrado, data validada e lista de campos faltando por tipo de atividade.
+4. `occurred_at` virou data real e a atividade ganhou `field_id`.
+5. Avaliação automatizada em `backend/eval`, com `npm run eval`.
 
-**Aplicativo (`mobile/`)**
-1. As telas são esqueletos; `services/api.ts` aponta para `localhost` e não envia o token.
-2. `package.json` usa `expo/AppEntry.js`; com Expo Router o correto é `expo-router/entry`.
-3. Atualizar o SDK do Expo. `expo-av` foi descontinuado (usar `expo-audio`) e `sentry-expo`
-   também (usar `@sentry/react-native`).
-4. A fila offline está só em memória e se perde ao fechar o aplicativo. Persistir com `expo-sqlite`.
-5. `react-native-mmkv` não funciona no Expo Go; exige build de desenvolvimento.
+**Backend — pendente**
+1. Catálogo de produtos, regra de carência e alertas (etapa 3).
+2. Assistente com consulta ao histórico (etapa 3).
+3. Edição de atividade (`PATCH /activities/:id`) e organizações (etapa 6).
+
+**Aplicativo — feito na etapa 2**
+1. Expo atualizado para o SDK 57, com `expo-audio` no lugar do `expo-av`.
+2. Login por código (celular ou e-mail) direto no Supabase Auth.
+3. Fluxo completo: gravar, enviar, acompanhar o processamento, conferir o rascunho, salvar e ver no diário.
+4. Cadastro de propriedade e talhões, acessível pelo Perfil.
+5. Dependências que não eram usadas foram removidas (NativeWind, MMKV, Victory, i18next, Sentry,
+   PostHog, React Hook Form, Axios). Voltam quando houver uso.
+
+**Aplicativo — pendente**
+1. Fila offline persistente com `expo-sqlite` (etapa 4). Hoje, sem internet, a gravação fica na tela
+   com o botão "Tentar enviar de novo", mas se perde ao fechar o aplicativo.
+2. Telas ainda em esqueleto: alertas, edição de atividade, painel da cooperativa e configurações.
+3. Erros (Sentry) e métricas de uso (PostHog).
 
 ## 11. Trechos da atividade a atualizar
 

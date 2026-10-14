@@ -23,8 +23,8 @@ const upload = multer({
 
 const createVoiceJobSchema = z.object({
   client_id: z.string().uuid().optional(),
-  farm_id: z.string().optional(),
-  field_id: z.string().optional(),
+  farm_id: z.string().uuid().optional(),
+  field_id: z.string().uuid().optional(),
   timezone: z.string().optional()
 });
 

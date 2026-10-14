@@ -8,8 +8,9 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "start:worker": "node dist/worker.js",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test": "vitest run",
+    "eval": "tsx eval/run.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

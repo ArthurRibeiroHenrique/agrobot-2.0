@@ -1,5 +1,8 @@
+import { ActivityDraft } from '../schemas/activity.schema';
 import { transcribeAudio } from './transcription.service';
 import { extractActivityFromTranscript } from './extraction.service';
+import { buildDraft, emptyDraft, todayInTimezone } from './draft.service';
+import { listFields } from './farm.service';
 import { findVoiceJobById, updateVoiceJob } from './voice-job.service';
 
 const PROCESSABLE_STATUSES = ['queued', 'transcribing', 'extracting'];
@@ -25,14 +28,38 @@ export async function processVoiceJob(
       attempts: (job.attempts ?? 0) + 1
     });
 
-    const transcript = await transcribeAudio(job.audio_path);
+    const transcript = (await transcribeAudio(job.audio_path)).trim();
 
     await updateVoiceJob(jobId, {
       status: 'extracting',
       transcript
     });
 
-    const draft = await extractActivityFromTranscript(transcript);
+    const metadata = (job.metadata ?? {}) as Record<string, unknown>;
+    const today = todayInTimezone(
+      typeof metadata.timezone === 'string' ? metadata.timezone : null
+    );
+
+    let draft: ActivityDraft;
+
+    if (!transcript) {
+      // Áudio sem fala: não há o que interpretar.
+      draft = emptyDraft(transcript, today);
+    } else {
+      const fields = job.user_id ? await listFields(job.user_id) : [];
+      const extraction = await extractActivityFromTranscript(transcript, {
+        today,
+        fields
+      });
+
+      draft = buildDraft(extraction, {
+        transcript,
+        fields,
+        today,
+        preselectedFieldId:
+          typeof metadata.field_id === 'string' ? metadata.field_id : null
+      });
+    }
 
     await updateVoiceJob(jobId, {
       status: 'needs_confirmation',

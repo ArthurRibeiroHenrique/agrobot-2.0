@@ -1,7 +1,8 @@
 # Documentação da API
 
-Estado alvo da API. Hoje o backend implementa `/health`, as três rotas de `voice-jobs` e
-`GET /activities`, todas (exceto `/health`) com autenticação. As demais estão planejadas;
+Estado alvo da API. Hoje o backend implementa `/health`, as três rotas de `voice-jobs`,
+`GET /activities`, `GET/POST /farms` e `GET/POST /fields`, todas (exceto `/health`) com
+autenticação. As demais estão planejadas;
 ver [10-proposta-arquitetura-sem-n8n.md](10-proposta-arquitetura-sem-n8n.md).
 
 ## Base da API
@@ -49,5 +50,13 @@ Em caso de erro, a tarefa é repetida automaticamente; esgotadas as tentativas, 
 
 ## Rascunho de atividade
 
-Campos devolvidos em `draft`: `activity_type`, `product`, `quantity`, `unit`, `field_name`,
-`occurred_at`, `cost`, `currency`, `confidence`, `missing_fields`, `raw_transcript`.
+Campos devolvidos em `draft`: `activity_type`, `product`, `quantity`, `unit`, `field_id`,
+`field_name`, `occurred_at`, `cost`, `currency`, `confidence`, `missing_fields`, `raw_transcript`.
+
+- `activity_type`: plantio, aplicacao, adubacao, irrigacao, colheita, manejo, custo ou outro
+- `unit`: kg, g, t, L, mL, sc, ha ou un
+- `occurred_at`: data no formato AAAA-MM-DD. Se o produtor não disser a data, o rascunho assume hoje
+- `field_id`: preenchido quando o talhão falado bate com um talhão cadastrado
+- `missing_fields`: campos obrigatórios para aquele tipo de atividade que não ficaram claros na fala
+
+Na confirmação, o aplicativo envia `{ "corrections": { ... } }` com os campos revisados.

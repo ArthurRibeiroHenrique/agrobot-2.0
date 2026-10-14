@@ -1,3 +1,3 @@
-export function track(event, properties) { 
-  console.log(event, properties); 
-} 
+export function track(event: string, properties?: Record<string, unknown>) {
+  console.log(event, properties);
+}
