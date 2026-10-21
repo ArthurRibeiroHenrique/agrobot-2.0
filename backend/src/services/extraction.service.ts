@@ -50,7 +50,8 @@ export async function extractActivityFromTranscript(
 ): Promise<Extraction> {
   const completion = await openai.beta.chat.completions.parse({
     model: env.OPENAI_LLM_MODEL,
-    temperature: 0,
+    // Modelos de raciocínio não aceitam temperature; esforço baixo reduz custo e espera.
+    reasoning_effort: 'low',
     response_format: zodResponseFormat(extractionSchema, 'atividade_agricola'),
     messages: [
       {
