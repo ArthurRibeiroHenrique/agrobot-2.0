@@ -25,7 +25,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       }
     });
-  } catch {
+  } catch (erro) {
+    // A mensagem ao usuário é genérica; o erro real aparece no terminal do Expo.
+    if (__DEV__) {
+      console.warn(`[api] ${init.method ?? 'GET'} ${API_URL + path} falhou:`, erro);
+    }
     throw new ApiError(0, 'Sem conexão com o servidor. Verifique a internet.');
   }
 

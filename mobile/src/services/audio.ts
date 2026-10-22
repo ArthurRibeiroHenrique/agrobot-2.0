@@ -4,6 +4,7 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync
 } from 'expo-audio';
+import { File } from 'expo-file-system';
 
 import type { VoiceJob } from '../types';
 import { apiUpload } from './api';
@@ -29,34 +30,17 @@ export function novoClientId(): string {
   return randomUUID();
 }
 
-function tipoDoArquivo(uri: string): { nome: string; tipo: string } {
-  const extensao = uri.split('.').pop()?.toLowerCase() ?? 'm4a';
-  const tipos: Record<string, string> = {
-    m4a: 'audio/mp4',
-    mp4: 'audio/mp4',
-    caf: 'audio/x-caf',
-    wav: 'audio/wav',
-    webm: 'audio/webm',
-    '3gp': 'audio/3gpp'
-  };
-
-  return {
-    nome: `gravacao.${extensao}`,
-    tipo: tipos[extensao] ?? 'application/octet-stream'
-  };
-}
-
 // O client_id identifica a gravação: reenviar a mesma não cria outro registro.
 export function enviarGravacao(input: {
   uri: string;
   clientId: string;
   fieldId?: string | null;
 }): Promise<VoiceJob> {
-  const { nome, tipo } = tipoDoArquivo(input.uri);
   const form = new FormData();
 
-  // No React Native, um arquivo em FormData é descrito por { uri, name, type }.
-  form.append('audio', { uri: input.uri, name: nome, type: tipo } as unknown as Blob);
+  // O fetch do Expo não aceita o formato { uri, name, type } do React Native:
+  // o arquivo precisa ir como File do expo-file-system, que já traz nome e tipo.
+  form.append('audio', new File(input.uri) as unknown as Blob);
   form.append('client_id', input.clientId);
   form.append('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
 
