@@ -10,7 +10,10 @@ const UNIQUE_VIOLATION = '23505';
 
 // Colunas devolvidas ao aplicativo; audio_path e metadata ficam só no servidor.
 const PUBLIC_COLUMNS =
-  'id, client_id, status, transcript, draft, error, activity_id, created_at, updated_at';
+  'id, client_id, status, intent, transcript, draft, answer, error, activity_id, created_at, updated_at';
+
+// Uma pergunta respondida ainda pode virar registro, se o produtor quiser anotar.
+const CONFIRMABLE_STATUSES = ['needs_confirmation', 'answered'];
 
 export async function createVoiceJob(input: {
   userId: string;
@@ -113,7 +116,7 @@ export async function confirmVoiceJob(
     throw new HttpError(404, 'Voice job não encontrado');
   }
 
-  if (job.status !== 'needs_confirmation') {
+  if (!CONFIRMABLE_STATUSES.includes(job.status)) {
     throw new HttpError(
       409,
       `Voice job não está aguardando confirmação (status: ${job.status})`

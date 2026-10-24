@@ -28,10 +28,11 @@ Por isso a API não tem rotas `/auth`.
 | POST /voice-jobs | Envia áudio e cria a tarefa (resposta 202) |
 | GET /voice-jobs/:id | Consulta status e rascunho |
 | POST /voice-jobs/:id/confirm | Confirma ou corrige o rascunho |
+| POST /voice-jobs/:id/ask | Trata a gravação como pergunta e responde |
 | GET, POST /activities | Diário agrícola |
 | PATCH /activities/:id | Edição de atividade |
 | GET /alerts | Alertas do produtor |
-| POST /assistant/messages | Pergunta ao assistente |
+| GET, POST /assistant/messages | Histórico e nova pergunta ao assistente |
 | GET /organizations/:id/metrics | Painel agregado da cooperativa |
 | POST /organizations/:id/invites | Convite de produtores |
 
@@ -47,6 +48,34 @@ Por isso a API não tem rotas `/auth`.
 8. Atividade é salva (`confirmed`); se for aplicação de defensivo, o alerta de carência é gerado
 
 Em caso de erro, a tarefa é repetida automaticamente; esgotadas as tentativas, o status fica `failed`.
+
+### Registro, pergunta ou os dois
+
+No passo 4, o LLM também classifica a intenção da fala (`intent`):
+
+- `registro`: segue o fluxo acima
+- `pergunta`: o assistente responde e o status vai direto para `answered`, com a resposta em `answer`
+- `ambos`: o rascunho vai para `needs_confirmation` e a resposta vem junto em `answer`
+- `incerto`: vai para `needs_confirmation` e o aplicativo pergunta se o produtor quer anotar ou perguntar
+
+Se a IA errar, o produtor corrige: um rascunho pode virar pergunta (`POST /voice-jobs/:id/ask`) e uma
+pergunta respondida ainda pode ser confirmada como registro (`POST /voice-jobs/:id/confirm`).
+
+## Assistente
+
+`POST /assistant/messages` recebe `{ "question": "...", "timezone": "America/Sao_Paulo" }` e devolve
+`answer`, `needs_technician` e `reason`. O assistente consulta os talhões e as últimas 30 atividades
+do produtor.
+
+`needs_technician` indica que o aplicativo deve mostrar o aviso "Procure um técnico agrícola". Além do
+que a IA decide, o código força o encaminhamento quando:
+
+- o assunto é diagnóstico de praga ou doença, dose ou mistura de defensivo, carência ou segurança
+- a confiança da resposta fica abaixo de 0,6 (exceto pergunta fora do assunto da lavoura)
+
+`reason`: `nenhum`, `diagnostico_praga_doenca`, `dose_ou_mistura_de_defensivo`,
+`carencia_ou_seguranca`, `informacao_insuficiente` ou `fora_do_escopo`. Toda pergunta fica salva em
+`assistant_messages`, para acompanhar quantos encaminhamentos acontecem e por quê.
 
 ## Rascunho de atividade
 

@@ -8,6 +8,7 @@ import { normalizeAudioExtension } from '../utils/audio-format';
 import { getUserId } from '../middlewares/auth';
 import { enqueueVoiceJob } from '../jobs/queue';
 import { removeAudio, uploadAudio } from '../services/storage.service';
+import { answerVoiceJobAsQuestion } from '../services/assistant.service';
 import {
   createVoiceJob,
   findVoiceJobByClientId,
@@ -133,5 +134,12 @@ voiceRouter.post(
     );
 
     res.status(201).json(activity);
+  })
+);
+
+voiceRouter.post(
+  '/voice-jobs/:id/ask',
+  asyncHandler(async (req, res) => {
+    res.json(await answerVoiceJobAsQuestion(req.params.id, getUserId(req)));
   })
 );

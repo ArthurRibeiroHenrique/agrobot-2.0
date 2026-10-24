@@ -5,7 +5,8 @@ import { env } from '../config/env';
 import {
   ACTIVITY_TYPES,
   Extraction,
-  extractionSchema
+  extractionSchema,
+  INTENTS
 } from '../schemas/activity.schema';
 import { FieldRef } from './farm.service';
 
@@ -26,6 +27,7 @@ export function buildSystemPrompt(context: ExtractionContext): string {
 
   return [
     'Você é um assistente de registro agrícola. Converta a fala de um produtor rural brasileiro em dados estruturados.',
+    'A fala pode relatar uma atividade feita, fazer uma pergunta, ou as duas coisas.',
     '',
     `Data de hoje: ${context.today}.`,
     '',
@@ -33,6 +35,9 @@ export function buildSystemPrompt(context: ExtractionContext): string {
     fields,
     '',
     'Regras:',
+    `- intent: um de ${INTENTS.join(', ')}. "registro" quando o produtor conta algo que fez ou gastou; "pergunta" quando só pergunta ou pede orientação; "ambos" quando conta uma atividade e também pergunta algo; "incerto" quando não dá para saber se ele quer anotar ou perguntar (por exemplo, só o nome de um produto e de um talhão, sem dizer o que fez).`,
+    '- question: quando intent for "pergunta" ou "ambos", a pergunta reescrita de forma completa, que se entenda sozinha (ex.: "Quando posso colher o Talhão 2 depois da aplicação de glifosato de hoje?"). Nos outros casos, null.',
+    '- Quando intent for "pergunta", não preencha a atividade: activity_type "outro" e os demais campos null. Produtos e talhões citados na pergunta não são uma atividade feita.',
     '- Não invente informações. O que não foi dito deve ser null.',
     `- activity_type: um de ${ACTIVITY_TYPES.join(', ')}. Use "aplicacao" para defensivos (herbicida, fungicida, inseticida), "adubacao" para adubo, calcário e fertilizante, "custo" para despesas sem operação de campo, e "outro" se não for possível classificar.`,
     '- product: nome do insumo, semente ou produto colhido, como falado.',

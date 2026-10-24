@@ -1,4 +1,5 @@
-import { ActivityDraft } from '../schemas/activity.schema';
+import { ActivityDraft, Intent } from '../schemas/activity.schema';
+import { askFromVoice, VoiceAnswer } from './assistant.service';
 import { transcribeAudio } from './transcription.service';
 import { extractActivityFromTranscript } from './extraction.service';
 import { buildDraft, emptyDraft, todayInTimezone } from './draft.service';
@@ -41,6 +42,8 @@ export async function processVoiceJob(
     );
 
     let draft: ActivityDraft;
+    let intent: Intent = 'registro';
+    let answer: VoiceAnswer | null = null;
 
     if (!transcript) {
       // Áudio sem fala: não há o que interpretar.
@@ -59,11 +62,28 @@ export async function processVoiceJob(
         preselectedFieldId:
           typeof metadata.field_id === 'string' ? metadata.field_id : null
       });
+
+      // Registros antigos sem dono não têm histórico para o assistente consultar.
+      intent = job.user_id ? extraction.intent : 'registro';
+
+      if (job.user_id && (intent === 'pergunta' || intent === 'ambos')) {
+        answer = await askFromVoice({
+          userId: job.user_id,
+          voiceJobId: jobId,
+          question: extraction.question?.trim() || transcript,
+          timezone: typeof metadata.timezone === 'string' ? metadata.timezone : null,
+          // A atividade relatada junto ainda não está no diário: vai como contexto.
+          pendingReport: intent === 'ambos' ? transcript : null
+        });
+      }
     }
 
+    // Só pergunta: já está respondida. Registro, ambos ou incerto: o produtor confere.
     await updateVoiceJob(jobId, {
-      status: 'needs_confirmation',
+      status: intent === 'pergunta' ? 'answered' : 'needs_confirmation',
+      intent,
       draft,
+      answer,
       error: null
     });
   } catch (error) {

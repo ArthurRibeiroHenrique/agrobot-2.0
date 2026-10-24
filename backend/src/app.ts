@@ -10,6 +10,7 @@ import { healthRouter } from './routes/health.routes';
 import { voiceRouter } from './routes/voice.routes';
 import { activitiesRouter } from './routes/activities.routes';
 import { farmsRouter } from './routes/farms.routes';
+import { assistantRouter } from './routes/assistant.routes';
 
 export function createApp() {
   const app = express();
@@ -34,6 +35,7 @@ export function createApp() {
   v1.use('/', voiceRouter);
   v1.use('/', activitiesRouter);
   v1.use('/', farmsRouter);
+  v1.use('/', assistantRouter);
 
   app.use('/v1', v1);
 

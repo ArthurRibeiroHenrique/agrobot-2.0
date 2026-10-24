@@ -10,7 +10,8 @@
     "start:worker": "node dist/worker.js",
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
-    "eval": "tsx eval/run.ts"
+    "eval": "tsx eval/run.ts",
+    "eval:assistant": "tsx eval/assistant.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",

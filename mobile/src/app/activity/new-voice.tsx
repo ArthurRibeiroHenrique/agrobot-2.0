@@ -110,7 +110,7 @@ export default function NewVoiceScreen() {
         ) : (
           <>
             <Text style={styles.dica}>
-              Diga o que fez, com qual produto, quanto e em qual talhão.
+              Conte o que fez (produto, quantidade e talhão) ou faça uma pergunta.
             </Text>
             <GravadorVoz
               gravando={gravando}

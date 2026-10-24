@@ -50,7 +50,10 @@ async function main() {
       today: evalCase.today
     });
 
-    const results = compareCase(evalCase.expected, draft as EvalValues);
+    const results = compareCase(evalCase.expected, {
+      ...(draft as EvalValues),
+      intent: extraction.intent
+    });
     const errors = results.filter((result) => !result.correct);
 
     allResults.push(...results);

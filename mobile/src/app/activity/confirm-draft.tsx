@@ -1,13 +1,14 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
+import { RespostaAssistente } from '../../components/assistant/RespostaAssistente';
 import { BotaoGrande } from '../../components/ui/BotaoGrande';
 import { Campo } from '../../components/ui/Campo';
 import { Opcoes } from '../../components/ui/Opcoes';
 import { Erro, Paragrafo, Tela, Titulo } from '../../components/ui/Tela';
 import { useFields } from '../../hooks/useFarm';
-import { useConfirmVoiceJob, useVoiceJob } from '../../hooks/useVoiceJob';
+import { useAskVoiceJob, useConfirmVoiceJob, useVoiceJob } from '../../hooks/useVoiceJob';
 import { cores, TIPOS_DE_ATIVIDADE } from '../../lib/constants';
 import { formatarData, formatarNumero, lerData, lerNumero } from '../../lib/format';
 import { mensagemDeErro } from '../../services/api';
@@ -18,8 +19,11 @@ const SEM_TALHAO = 'nenhum';
 const MENSAGEM_DE_STATUS: Record<string, string> = {
   queued: 'Sua gravação está na fila…',
   transcribing: 'Ouvindo o que você falou…',
-  extracting: 'Organizando as informações…'
+  extracting: 'Entendendo o que você falou…'
 };
+
+// Status em que já existe rascunho para preencher o formulário.
+const COM_RASCUNHO = ['needs_confirmation', 'answered'];
 
 type Formulario = {
   tipo: string;
@@ -51,16 +55,21 @@ export default function ConfirmDraftScreen() {
   const job = useVoiceJob(id);
   const talhoes = useFields();
   const confirmar = useConfirmVoiceJob(id);
+  const perguntar = useAskVoiceJob(id);
 
   const [form, setForm] = useState<Formulario | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  // O produtor escolheu anotar no diário (fala incerta ou pergunta que era registro).
+  const [querAnotar, setQuerAnotar] = useState(false);
 
   const status = job.data?.status;
+  const intent = job.data?.intent;
   const draft = job.data?.draft;
+  const resposta = job.data?.answer;
 
   // Preenche o formulário uma única vez, quando o rascunho chega.
   useEffect(() => {
-    if (status === 'needs_confirmation' && draft && form === null) {
+    if (status && COM_RASCUNHO.includes(status) && draft && form === null) {
       setForm(paraFormulario(draft));
     }
   }, [status, draft, form]);
@@ -94,6 +103,16 @@ export default function ConfirmDraftScreen() {
       });
 
       router.dismissTo('/diary');
+    } catch (falha) {
+      setErro(mensagemDeErro(falha));
+    }
+  }
+
+  async function tratarComoPergunta() {
+    setErro(null);
+
+    try {
+      await perguntar.mutateAsync();
     } catch (falha) {
       setErro(mensagemDeErro(falha));
     }
@@ -146,6 +165,56 @@ export default function ConfirmDraftScreen() {
     );
   }
 
+  const transcricao = job.data?.transcript ? (
+    <View style={styles.transcricao}>
+      <Text style={styles.transcricaoRotulo}>Você disse</Text>
+      <Text style={styles.transcricaoTexto}>“{job.data.transcript}”</Text>
+    </View>
+  ) : null;
+
+  if (status === 'answered' && resposta && !querAnotar) {
+    return (
+      <Tela>
+        <Stack.Screen options={{ title: 'Resposta' }} />
+        {transcricao}
+        <RespostaAssistente
+          resposta={resposta.answer}
+          precisaTecnico={resposta.needs_technician}
+        />
+        <BotaoGrande
+          texto="Fazer outra pergunta"
+          onPress={() => router.replace('/activity/new-voice')}
+        />
+        <View style={styles.espaco} />
+        <BotaoGrande
+          texto="Era um registro? Anotar no diário"
+          variante="secundario"
+          onPress={() => setQuerAnotar(true)}
+        />
+      </Tela>
+    );
+  }
+
+  if (intent === 'incerto' && status === 'needs_confirmation' && !querAnotar) {
+    return (
+      <Tela>
+        <Stack.Screen options={{ title: 'O que você quer fazer?' }} />
+        <Titulo>O que você quer fazer?</Titulo>
+        {transcricao}
+        <Paragrafo>Não entendi se você quer anotar isso no diário ou tirar uma dúvida.</Paragrafo>
+        <BotaoGrande texto="Anotar no diário" onPress={() => setQuerAnotar(true)} />
+        <View style={styles.espaco} />
+        <BotaoGrande
+          texto="Tirar uma dúvida"
+          variante="secundario"
+          onPress={tratarComoPergunta}
+          carregando={perguntar.isPending}
+        />
+        <Erro>{erro}</Erro>
+      </Tela>
+    );
+  }
+
   const faltando = new Set(draft?.missing_fields ?? []);
   const semFala = !job.data?.transcript;
 
@@ -161,11 +230,17 @@ export default function ConfirmDraftScreen() {
       {semFala ? (
         <Paragrafo>Não ouvi nenhuma fala na gravação. Preencha abaixo ou grave de novo.</Paragrafo>
       ) : (
-        <View style={styles.transcricao}>
-          <Text style={styles.transcricaoRotulo}>Você disse</Text>
-          <Text style={styles.transcricaoTexto}>“{job.data?.transcript}”</Text>
-        </View>
+        transcricao
       )}
+
+      {/* Fala com registro e pergunta: a resposta vem antes do formulário. */}
+      {resposta ? (
+        <RespostaAssistente
+          pergunta={resposta.question}
+          resposta={resposta.answer}
+          precisaTecnico={resposta.needs_technician}
+        />
+      ) : null}
 
       {faltando.size > 0 ? (
         <Paragrafo>Os campos marcados com “confira” não ficaram claros na fala.</Paragrafo>
@@ -257,6 +332,18 @@ export default function ConfirmDraftScreen() {
         variante="secundario"
         onPress={() => router.replace('/activity/new-voice')}
       />
+
+      {!resposta && !semFala && status === 'needs_confirmation' ? (
+        <>
+          <View style={styles.espaco} />
+          <BotaoGrande
+            texto="Era uma pergunta? Perguntar ao AgroBot"
+            variante="secundario"
+            onPress={tratarComoPergunta}
+            carregando={perguntar.isPending}
+          />
+        </>
+      ) : null}
     </Tela>
   );
 }

@@ -34,15 +34,29 @@ export type VoiceJobStatus =
   | 'transcribing'
   | 'extracting'
   | 'needs_confirmation'
+  | 'answered'
   | 'confirmed'
   | 'failed';
+
+// registro, pergunta, ambos ou incerto (a IA não soube; o app pergunta).
+export type VoiceIntent = 'registro' | 'pergunta' | 'ambos' | 'incerto';
+
+export type VoiceAnswer = {
+  message_id: string;
+  question: string;
+  answer: string;
+  needs_technician: boolean;
+  reason: string;
+};
 
 export type VoiceJob = {
   id: string;
   client_id: string | null;
   status: VoiceJobStatus;
+  intent: VoiceIntent | null;
   transcript: string | null;
   draft: Partial<ActivityDraft> | null;
+  answer: VoiceAnswer | null;
   error: string | null;
   activity_id: string | null;
 };
@@ -60,4 +74,15 @@ export type Field = {
   name: string;
   crop: string | null;
   area_ha: number | null;
+};
+
+export type AssistantMessage = {
+  id: string;
+  question: string;
+  answer: string;
+  needs_technician: boolean;
+  reason: string;
+  source: 'texto' | 'voz';
+  voice_job_id: string | null;
+  created_at: string;
 };

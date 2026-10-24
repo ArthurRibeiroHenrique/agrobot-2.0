@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost } from '../services/api';
 import type { Activity, ActivityDraft, VoiceJob } from '../types';
 import { CHAVE_ATIVIDADES } from './useActivities';
+import { CHAVE_PERGUNTAS } from './useAssistant';
 
 const EM_PROCESSAMENTO = ['queued', 'transcribing', 'extracting'];
 
@@ -26,5 +27,18 @@ export function useConfirmVoiceJob(id: string | undefined) {
     mutationFn: (corrections: Partial<ActivityDraft>) =>
       apiPost<Activity>(`/voice-jobs/${id}/confirm`, { corrections }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE_ATIVIDADES })
+  });
+}
+
+// A gravação era uma pergunta: pede a resposta usando o que foi falado.
+export function useAskVoiceJob(id: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => apiPost<VoiceJob>(`/voice-jobs/${id}/ask`, {}),
+    onSuccess: (job) => {
+      queryClient.setQueryData(['voice-job', id], job);
+      queryClient.invalidateQueries({ queryKey: CHAVE_PERGUNTAS });
+    }
   });
 }

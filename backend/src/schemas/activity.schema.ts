@@ -13,6 +13,12 @@ export const ACTIVITY_TYPES = [
 
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 
+// O que o produtor quis com a fala: anotar no diário, perguntar, os dois,
+// ou não dá para saber (o app pergunta).
+export const INTENTS = ['registro', 'pergunta', 'ambos', 'incerto'] as const;
+
+export type Intent = (typeof INTENTS)[number];
+
 const numericOrNull = z.preprocess((value) => {
   if (value === null || value === undefined || value === '') return null;
 
@@ -38,6 +44,8 @@ const dateOrNull = z
 // Formato pedido ao LLM. A saída estruturada exige todos os campos presentes,
 // por isso o que não foi dito vem como null em vez de ausente.
 export const extractionSchema = z.object({
+  intent: z.enum(INTENTS),
+  question: z.string().nullable(),
   activity_type: z.enum(ACTIVITY_TYPES),
   product: z.string().nullable(),
   quantity: z.number().nullable(),

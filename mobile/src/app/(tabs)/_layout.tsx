@@ -23,6 +23,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Início', tabBarIcon: icone('🏠') }} />
       <Tabs.Screen name="diary" options={{ title: 'Diário', tabBarIcon: icone('📒') }} />
+      <Tabs.Screen name="assistant" options={{ title: 'Perguntar', tabBarIcon: icone('💬') }} />
       <Tabs.Screen name="alerts" options={{ title: 'Alertas', tabBarIcon: icone('🔔') }} />
       <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: icone('👤') }} />
     </Tabs>

@@ -13,7 +13,10 @@ const mocks = vi.hoisted(() => ({
   findVoiceJobByClientId: vi.fn(),
   getVoiceJob: vi.fn(),
   confirmVoiceJob: vi.fn(),
-  listActivities: vi.fn()
+  listActivities: vi.fn(),
+  askAssistant: vi.fn(),
+  listAssistantMessages: vi.fn(),
+  answerVoiceJobAsQuestion: vi.fn()
 }));
 
 vi.mock('../src/lib/supabase', () => ({
@@ -35,6 +38,12 @@ vi.mock('../src/services/voice-job.service', () => ({
   getVoiceJob: mocks.getVoiceJob,
   confirmVoiceJob: mocks.confirmVoiceJob,
   listActivities: mocks.listActivities
+}));
+
+vi.mock('../src/services/assistant.service', () => ({
+  askAssistant: mocks.askAssistant,
+  listAssistantMessages: mocks.listAssistantMessages,
+  answerVoiceJobAsQuestion: mocks.answerVoiceJobAsQuestion
 }));
 
 import { createApp } from '../src/app';
@@ -170,6 +179,63 @@ describe('GET /v1/voice-jobs/:id', () => {
 
     expect(res.status).toBe(404);
     expect(mocks.getVoiceJob).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /v1/voice-jobs/:id/ask', () => {
+  it('responde a gravação como pergunta para o dono', async () => {
+    mocks.answerVoiceJobAsQuestion.mockResolvedValue({ id: JOB_ID, status: 'answered' });
+
+    const res = await request(app).post(`/v1/voice-jobs/${JOB_ID}/ask`).set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('answered');
+    expect(mocks.answerVoiceJobAsQuestion).toHaveBeenCalledWith(JOB_ID, USER_ID);
+  });
+});
+
+describe('POST /v1/assistant/messages', () => {
+  it('responde a pergunta do usuário do token', async () => {
+    mocks.askAssistant.mockResolvedValue({
+      id: JOB_ID,
+      question: 'Quando adubei o talhão 2?',
+      answer: 'Em 06/10.',
+      needs_technician: false,
+      reason: 'nenhum'
+    });
+
+    const res = await request(app)
+      .post('/v1/assistant/messages')
+      .set(auth)
+      .send({ question: '  Quando adubei o talhão 2?  ' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.answer).toBe('Em 06/10.');
+    expect(mocks.askAssistant).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: USER_ID,
+        question: 'Quando adubei o talhão 2?',
+        source: 'texto'
+      })
+    );
+  });
+
+  it('recusa pergunta vazia', async () => {
+    const res = await request(app)
+      .post('/v1/assistant/messages')
+      .set(auth)
+      .send({ question: '   ' });
+
+    expect(res.status).toBe(400);
+    expect(mocks.askAssistant).not.toHaveBeenCalled();
+  });
+
+  it('exige autenticação', async () => {
+    const res = await request(app)
+      .post('/v1/assistant/messages')
+      .send({ question: 'Oi' });
+
+    expect(res.status).toBe(401);
   });
 });
 

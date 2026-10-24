@@ -19,6 +19,8 @@ const TODAY = '2026-10-07';
 
 function extraction(overrides: Partial<Extraction> = {}): Extraction {
   return {
+    intent: 'registro',
+    question: null,
     activity_type: 'aplicacao',
     product: 'glifosato',
     quantity: 20,

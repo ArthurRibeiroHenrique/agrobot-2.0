@@ -15,11 +15,12 @@ export default function HomeScreen() {
     <Tela>
       <Titulo>O que você fez hoje?</Titulo>
       <Paragrafo>
-        Toque no botão e fale. Por exemplo: “Passei vinte litros de herbicida no talhão dois”.
+        Toque no botão e fale. Conte o que fez, como “Passei vinte litros de herbicida no talhão
+        dois”, ou tire uma dúvida, como “Quando adubei o talhão dois?”.
       </Paragrafo>
 
       <BotaoGrande
-        texto="Registrar por voz"
+        texto="Falar com o AgroBot"
         onPress={() => router.push('/activity/new-voice')}
       />
 
