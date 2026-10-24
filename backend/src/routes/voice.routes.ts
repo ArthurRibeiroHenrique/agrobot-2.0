@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { asyncHandler } from '../utils/async-handler';
 import { HttpError } from '../utils/http-error';
+import { normalizeAudioExtension } from '../utils/audio-format';
 import { getUserId } from '../middlewares/auth';
 import { enqueueVoiceJob } from '../jobs/queue';
 import { removeAudio, uploadAudio } from '../services/storage.service';
@@ -47,6 +48,13 @@ voiceRouter.post(
 
     if (!req.file) {
       throw new HttpError(400, 'Arquivo de áudio é obrigatório');
+    }
+
+    if (!normalizeAudioExtension(req.file.originalname)) {
+      throw new HttpError(
+        400,
+        'Formato de áudio não aceito. Use MP3, M4A, WAV, OGG, OPUS, WEBM ou FLAC.'
+      );
     }
 
     const body = createVoiceJobSchema.parse(req.body ?? {});

@@ -8,7 +8,11 @@ import { GravadorVoz } from '../../components/voice/GravadorVoz';
 import { useVoiceRecording } from '../../hooks/useVoiceRecording';
 import { cores } from '../../lib/constants';
 import { mensagemDeErro } from '../../services/api';
-import { enviarGravacao, novoClientId } from '../../services/audio';
+import {
+  enviarGravacao,
+  escolherArquivoDeAudio,
+  novoClientId
+} from '../../services/audio';
 
 // Gravações mais curtas que isso quase sempre são toque acidental.
 const DURACAO_MINIMA_MS = 1000;
@@ -78,6 +82,23 @@ export default function NewVoiceScreen() {
     }
   }
 
+  async function enviarArquivo() {
+    setErro(null);
+
+    try {
+      const uri = await escolherArquivoDeAudio();
+
+      if (!uri) return;
+
+      pendente.current = null;
+      setTemPendente(false);
+
+      await enviar({ uri, clientId: novoClientId() });
+    } catch (falha) {
+      setErro(mensagemDeErro(falha));
+    }
+  }
+
   return (
     <Tela rolagem={false}>
       <View style={styles.centro}>
@@ -108,6 +129,16 @@ export default function NewVoiceScreen() {
           onPress={() => pendente.current && enviar(pendente.current)}
         />
       ) : null}
+
+      {!enviando && !gravando ? (
+        <View style={styles.arquivo}>
+          <BotaoGrande
+            texto="Enviar áudio já gravado"
+            variante="secundario"
+            onPress={enviarArquivo}
+          />
+        </View>
+      ) : null}
     </Tela>
   );
 }
@@ -129,5 +160,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: cores.texto,
     marginTop: 20
+  },
+  arquivo: {
+    marginTop: 12
   }
 });

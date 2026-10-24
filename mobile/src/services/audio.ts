@@ -4,6 +4,7 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync
 } from 'expo-audio';
+import { getDocumentAsync } from 'expo-document-picker';
 import { File } from 'expo-file-system';
 
 import type { VoiceJob } from '../types';
@@ -28,6 +29,28 @@ export async function prepararModoDeGravacao(): Promise<void> {
 
 export function novoClientId(): string {
   return randomUUID();
+}
+
+// Mesmo limite do servidor e da transcrição.
+const TAMANHO_MAXIMO_BYTES = 25 * 1024 * 1024;
+
+// Abre o seletor de arquivos do celular para escolher um áudio já gravado
+// (WhatsApp, gravador do celular etc.). Devolve null se a pessoa cancelar.
+export async function escolherArquivoDeAudio(): Promise<string | null> {
+  const resultado = await getDocumentAsync({
+    type: 'audio/*',
+    copyToCacheDirectory: true
+  });
+
+  if (resultado.canceled) return null;
+
+  const arquivo = resultado.assets[0];
+
+  if (arquivo.size && arquivo.size > TAMANHO_MAXIMO_BYTES) {
+    throw new Error('Esse áudio é grande demais. Escolha um de até 25 MB.');
+  }
+
+  return arquivo.uri;
 }
 
 // O client_id identifica a gravação: reenviar a mesma não cria outro registro.
