@@ -15,6 +15,9 @@ A arquitetura completa está em [docs/10-proposta-arquitetura-sem-n8n.md](docs/1
 
 ## Como rodar
 
+Guia completo, com solução de problemas: [docs/11-como-rodar-localmente.md](docs/11-como-rodar-localmente.md).
+Resumo:
+
 Backend:
 
 1. No SQL Editor do Supabase, executar em ordem os arquivos de `backend/supabase/migrations`

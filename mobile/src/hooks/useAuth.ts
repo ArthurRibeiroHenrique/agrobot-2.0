@@ -47,6 +47,10 @@ export async function enviarCodigo(contato: string): Promise<string> {
 
   if (error) throw error;
 
+  // Guardado no store, e não nos parâmetros da rota, para a tela do código
+  // sempre saber o destino.
+  useAuthStore.getState().setContatoPendente(destino);
+
   return destino;
 }
 

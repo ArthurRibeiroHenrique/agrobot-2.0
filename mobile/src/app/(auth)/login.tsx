@@ -21,13 +21,20 @@ export default function LoginScreen() {
   );
 
   async function receberCodigo() {
+    if (!supabaseConfigurado) {
+      setErro(
+        'Aplicativo sem configuração do Supabase. Confira a URL e a chave no arquivo .env e reinicie o Expo.'
+      );
+      return;
+    }
+
     setErro(null);
     setEnviando(true);
 
     try {
-      const destino = await enviarCodigo(contato);
+      await enviarCodigo(contato);
 
-      router.push({ pathname: '/otp', params: { contato: destino } });
+      router.push('/otp');
     } catch (falha) {
       setErro(mensagemDeErro(falha));
     } finally {

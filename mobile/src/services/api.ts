@@ -11,26 +11,47 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+// Sem limite, o fetch espera minutos quando o servidor não responde e a tela
+// fica carregando sem explicação.
+const TEMPO_LIMITE_MS = 20_000;
+// Perguntas ao assistente esperam a resposta da IA.
+const TEMPO_LIMITE_POST_MS = 60_000;
+// Envio de áudio pode demorar mais em internet lenta.
+const TEMPO_LIMITE_UPLOAD_MS = 90_000;
+
+async function request<T>(
+  path: string,
+  init: RequestInit = {},
+  tempoLimiteMs = TEMPO_LIMITE_MS
+): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
 
   let response: Response;
+  const controle = new AbortController();
+  const timer = setTimeout(() => controle.abort(), tempoLimiteMs);
 
   try {
     response = await fetch(API_URL + path, {
       ...init,
+      signal: controle.signal,
       headers: {
         ...(init.headers ?? {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       }
     });
   } catch (erro) {
+    if (controle.signal.aborted) {
+      throw new ApiError(0, 'O servidor demorou demais para responder. Tente de novo.');
+    }
+
     // A mensagem ao usuário é genérica; o erro real aparece no terminal do Expo.
     if (__DEV__) {
       console.warn(`[api] ${init.method ?? 'GET'} ${API_URL + path} falhou:`, erro);
     }
     throw new ApiError(0, 'Sem conexão com o servidor. Verifique a internet.');
+  } finally {
+    clearTimeout(timer);
   }
 
   const body = await response.json().catch(() => null);
@@ -54,7 +75,7 @@ export function apiPost<T>(path: string, body: unknown): Promise<T> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
-  });
+  }, TEMPO_LIMITE_POST_MS);
 }
 
 // O fetch define o Content-Type (com o boundary) sozinho para FormData.
@@ -62,7 +83,7 @@ export function apiUpload<T>(path: string, form: FormData): Promise<T> {
   return request<T>(path, {
     method: 'POST',
     body: form
-  });
+  }, TEMPO_LIMITE_UPLOAD_MS);
 }
 
 export function mensagemDeErro(erro: unknown): string {
