@@ -26,10 +26,10 @@ export default function DiaryScreen() {
       refreshing={atualizando}
       onRefresh={carregar}
       ListHeaderComponent={
-        erro ? <Text style={styles.erro}>{mensagemDeErro(erro)}</Text> : null
+        erro ? <Text style={styles.erro}>{mensagemDeErro(erro)}</Text> : undefined
       }
       ListEmptyComponent={
-        erro ? null : (
+        erro ? undefined : (
           <Text style={styles.vazio}>
             Seu diário está vazio. Faça o primeiro registro por voz na tela Início.
           </Text>

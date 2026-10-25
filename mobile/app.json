@@ -21,7 +21,8 @@
           "microphonePermission": "O AgroBot usa o microfone para registrar suas atividades por voz."
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-asset"
     ]
   }
 }
