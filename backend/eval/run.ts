@@ -35,7 +35,8 @@ async function main() {
     const transcript = evalCase.audio
       ? await transcribeBuffer(
           fs.readFileSync(path.resolve(path.dirname(casesPath), evalCase.audio)),
-          path.basename(evalCase.audio)
+          path.basename(evalCase.audio),
+          fields.map((field) => field.name)
         )
       : evalCase.transcript ?? '';
 

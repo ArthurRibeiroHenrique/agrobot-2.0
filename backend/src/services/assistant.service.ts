@@ -9,7 +9,7 @@ import {
   assistantAnswerSchema
 } from '../schemas/assistant.schema';
 import { todayInTimezone } from './draft.service';
-import { FieldRef, listFields } from './farm.service';
+import { FieldRef, listFarms, listFields } from './farm.service';
 import { HttpError } from '../utils/http-error';
 import {
   findVoiceJobById,
@@ -46,6 +46,8 @@ export type ActivityRef = {
 
 export type AssistantContext = {
   today: string;
+  // Cidade e estado da propriedade, quando cadastrados.
+  location?: string | null;
   fields: FieldRef[];
   activities: ActivityRef[];
   // Fala do produtor que também relatou uma atividade ainda não confirmada.
@@ -103,6 +105,7 @@ export function buildAssistantPrompt(context: AssistantContext): string {
     'Responda em português simples, em no máximo 5 frases curtas, sem termos técnicos difíceis.',
     '',
     `Data de hoje: ${context.today}.`,
+    `Local da propriedade: ${context.location || 'não informado'}.`,
     '',
     'Talhões cadastrados deste produtor:',
     fields,
@@ -121,6 +124,8 @@ export function buildAssistantPrompt(context: AssistantContext): string {
     '- Para perguntas sobre o que o produtor já fez, use só o diário acima. Se não estiver lá, diga que não encontrou o registro.',
     '- Não invente números, datas, produtos ou registros.',
     '- Nunca informe dose, mistura de produtos ou período de carência de defensivos. Diga para seguir a bula e confirmar com um técnico agrícola.',
+    '- Sobre mistura de produtos na calda, não diga que pode, que não pode ou que "não é recomendado", e não ensine testes de mistura: diga só que depende da bula de cada produto e que o técnico agrícola deve orientar.',
+    '- Perguntas gerais de cultivo (época de plantio, para que serve um adubo, como funciona uma cultura) não precisam de técnico: dê a orientação geral para o local da propriedade e avise que o calendário exato depende do zoneamento agrícola da região.',
     '- Nunca dê diagnóstico definitivo de praga, doença ou deficiência. Você pode citar possibilidades, mas diga que é preciso um técnico ver a lavoura.',
     '- needs_technician: true quando a resposta depende de ver a lavoura, de análise de solo, de receituário agronômico, envolve risco à saúde ou ao ambiente, ou quando você não tem certeza.',
     '- reason: "diagnostico_praga_doenca" para sintomas, pragas e doenças; "dose_ou_mistura_de_defensivo" para dose, calda e mistura; "carencia_ou_seguranca" para carência, reentrada, intoxicação e uso de EPI; "informacao_insuficiente" quando faltam dados para responder; "fora_do_escopo" quando a pergunta não tem relação com agricultura ou com a propriedade (nesse caso, diga com gentileza que só ajuda com assuntos da lavoura); "nenhum" nos demais casos.',
@@ -196,13 +201,17 @@ export async function askAssistant(input: {
   voiceJobId?: string | null;
   pendingReport?: string | null;
 }) {
-  const [fields, activities] = await Promise.all([
+  const [farms, fields, activities] = await Promise.all([
+    listFarms(input.userId),
     listFields(input.userId),
     listActivities(input.userId)
   ]);
 
+  const farm = farms[0];
+
   const reply = await answerQuestion(input.question, {
     today: todayInTimezone(input.timezone ?? null),
+    location: farm ? [farm.city, farm.state].filter(Boolean).join(' - ') : null,
     fields,
     activities: activities.slice(0, HISTORY_LIMIT),
     pendingReport: input.pendingReport

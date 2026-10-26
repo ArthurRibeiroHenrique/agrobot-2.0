@@ -29,7 +29,14 @@ export async function processVoiceJob(
       attempts: (job.attempts ?? 0) + 1
     });
 
-    const transcript = (await transcribeAudio(job.audio_path)).trim();
+    // Os nomes dos talhões ajudam a transcrição e depois a interpretação.
+    const fields = job.user_id ? await listFields(job.user_id) : [];
+    const transcript = (
+      await transcribeAudio(
+        job.audio_path,
+        fields.map((field) => field.name)
+      )
+    ).trim();
 
     await updateVoiceJob(jobId, {
       status: 'extracting',
@@ -49,7 +56,6 @@ export async function processVoiceJob(
       // Áudio sem fala: não há o que interpretar.
       draft = emptyDraft(transcript, today);
     } else {
-      const fields = job.user_id ? await listFields(job.user_id) : [];
       const extraction = await extractActivityFromTranscript(transcript, {
         today,
         fields

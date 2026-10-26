@@ -157,6 +157,14 @@ describe('processVoiceJob por intenção', () => {
     expect(finalUpdate()).toMatchObject({ status: 'needs_confirmation', intent: 'incerto' });
   });
 
+  it('passa os nomes dos talhões para a transcrição', async () => {
+    mocks.extractActivityFromTranscript.mockResolvedValue(extraction());
+
+    await processVoiceJob(JOB_ID, { isLastAttempt: false });
+
+    expect(mocks.transcribeAudio).toHaveBeenCalledWith(`${USER_ID}/a.m4a`, ['Talhão 2']);
+  });
+
   it('pergunta sem a versão reescrita usa a transcrição', async () => {
     mocks.extractActivityFromTranscript.mockResolvedValue(
       extraction({ intent: 'pergunta', question: null })

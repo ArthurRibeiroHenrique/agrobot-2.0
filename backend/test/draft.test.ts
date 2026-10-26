@@ -147,6 +147,30 @@ describe('buildDraft', () => {
     expect(draft.currency).toBe('BRL');
     expect(draft.missing_fields).toEqual([]);
   });
+
+  it('trata quantidade 0 e talhão vazio como não ditos', () => {
+    const draft = draftFor({ quantity: 0, field_name: '  ' });
+
+    expect(draft.quantity).toBeNull();
+    expect(draft.field_name).toBeNull();
+    expect(draft.missing_fields).toEqual(['quantity', 'field_name']);
+  });
+
+  it('pede o produto quando a fala não disse qual foi', () => {
+    for (const product of ['um produto', 'Produto', 'aquele negócio', 'uma coisa']) {
+      const draft = draftFor({ product });
+
+      expect(draft.product).toBeNull();
+      expect(draft.missing_fields).toContain('product');
+    }
+  });
+
+  it('mantém produto com nome, mesmo que tenha palavra genérica', () => {
+    expect(draftFor({ product: 'produto biológico Trichoderma' }).product).toBe(
+      'produto biológico Trichoderma'
+    );
+    expect(draftFor({ product: 'fungicida' }).product).toBe('fungicida');
+  });
 });
 
 describe('avaliação', () => {

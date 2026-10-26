@@ -185,5 +185,34 @@
     "expected": {
       "intent": "incerto"
     }
+  },
+  {
+    "id": "incerto-transcricao-errada",
+    "transcript": "Glifosfato, talhão dois.",
+    "today": "2026-10-24",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "intent": "incerto"
+    }
+  },
+  {
+    "id": "produto-vago",
+    "transcript": "Apliquei um produto lá no fundo da fazenda.",
+    "today": "2026-10-24",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "intent": "registro",
+      "activity_type": "aplicacao",
+      "product": null
+    }
+  },
+  {
+    "id": "pergunta-ureia",
+    "transcript": "Quanto que eu coloquei de ureia no talhão um?",
+    "today": "2026-10-24",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "intent": "pergunta"
+    }
   }
 ]

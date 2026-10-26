@@ -69,6 +69,30 @@ export function normalizeUnit(unit: string | null): string | null {
   return UNIT_ALIASES[key] ?? unit.trim();
 }
 
+// Palavras que não dizem qual foi o insumo: o produto fica em falta para o produtor preencher.
+const VAGUE_PRODUCTS = new Set([
+  'produto',
+  'produtos',
+  'coisa',
+  'negocio',
+  'trem',
+  'insumo'
+]);
+
+const ARTICLES = new Set(['um', 'uma', 'o', 'a', 'aquele', 'aquela', 'esse', 'essa']);
+
+export function cleanProduct(product: string | null): string | null {
+  const trimmed = product?.trim();
+
+  if (!trimmed) return null;
+
+  const words = normalizeText(trimmed)
+    .split(' ')
+    .filter((word) => !ARTICLES.has(word));
+
+  return words.length === 1 && VAGUE_PRODUCTS.has(words[0]) ? null : trimmed;
+}
+
 const SPOKEN_NUMBERS: Record<string, string> = {
   um: '1',
   dois: '2',
@@ -168,11 +192,12 @@ export function buildDraft(
 
   const draft: ActivityDraft = {
     activity_type: extraction.activity_type,
-    product: extraction.product?.trim() || null,
-    quantity: extraction.quantity,
+    product: cleanProduct(extraction.product),
+    // A IA às vezes devolve 0 ou "" para o que não foi dito.
+    quantity: extraction.quantity || null,
     unit: normalizeUnit(extraction.unit),
     field_id: field?.id ?? null,
-    field_name: field?.name ?? extraction.field_name?.trim() ?? null,
+    field_name: field?.name ?? (extraction.field_name?.trim() || null),
     occurred_at: occurredAt,
     cost: extraction.cost,
     currency: extraction.cost !== null ? extraction.currency || 'BRL' : null,

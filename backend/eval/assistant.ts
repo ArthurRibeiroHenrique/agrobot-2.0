@@ -19,6 +19,7 @@ type AssistantCase = {
 // Produtor fictício, igual para todos os casos.
 const CONTEXT = {
   today: '2026-10-24',
+  location: 'Chapecó - SC',
   fields: [
     { id: 'f1', name: 'Talhão 1', crop: 'soja' },
     { id: 'f2', name: 'Talhão 2', crop: 'milho' },
