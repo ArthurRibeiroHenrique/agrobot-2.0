@@ -26,6 +26,7 @@ O celular e o computador precisam estar na **mesma rede Wi-Fi**.
    2. `20261007000000_dono_storage_fila.sql`
    3. `20261008000000_propriedades_talhoes_datas.sql`
    4. `20261024000000_assistente_intencao.sql`
+   5. `20261027000000_varios_talhoes.sql`
 
    Sempre que aparecer uma migração nova no projeto, rode só a nova.
 3. Em **Authentication**, deixe o login por código habilitado. Por e-mail, o modelo

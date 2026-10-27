@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { compareCase, summarize } from '../eval/compare';
-import { Extraction } from '../src/schemas/activity.schema';
+import { ExtractedActivity, Extraction } from '../src/schemas/activity.schema';
 import {
   buildDraft,
+  buildDrafts,
   matchField,
   normalizeUnit,
   todayInTimezone
@@ -17,10 +18,8 @@ const FIELDS = [
 
 const TODAY = '2026-10-07';
 
-function extraction(overrides: Partial<Extraction> = {}): Extraction {
+function activity(overrides: Partial<ExtractedActivity> = {}): ExtractedActivity {
   return {
-    intent: 'registro',
-    question: null,
     activity_type: 'aplicacao',
     product: 'glifosato',
     quantity: 20,
@@ -29,18 +28,25 @@ function extraction(overrides: Partial<Extraction> = {}): Extraction {
     occurred_at: '2026-10-06',
     cost: null,
     currency: null,
-    confidence: 0.9,
     ...overrides
   };
 }
 
-function draftFor(overrides: Partial<Extraction> = {}, preselectedFieldId?: string) {
-  return buildDraft(extraction(overrides), {
+function draftFor(overrides: Partial<ExtractedActivity> = {}, preselectedFieldId?: string) {
+  return buildDraft(activity(overrides), {
     transcript: 'fala',
     fields: FIELDS,
     today: TODAY,
+    confidence: 0.9,
     preselectedFieldId
   });
+}
+
+function draftsFor(activities: ExtractedActivity[], overrides: Partial<Extraction> = {}) {
+  return buildDrafts(
+    { intent: 'registro', question: null, activities, confidence: 0.9, ...overrides },
+    { transcript: 'fala', fields: FIELDS, today: TODAY }
+  );
 }
 
 describe('normalizeUnit', () => {
@@ -170,6 +176,52 @@ describe('buildDraft', () => {
       'produto biológico Trichoderma'
     );
     expect(draftFor({ product: 'fungicida' }).product).toBe('fungicida');
+  });
+});
+
+describe('buildDrafts', () => {
+  it('monta um rascunho por talhão citado na mesma fala', () => {
+    const drafts = draftsFor([
+      activity({ field_name: 'talhão um', quantity: 10 }),
+      activity({ field_name: 'talhão dois', quantity: 15 })
+    ]);
+
+    expect(drafts).toHaveLength(2);
+    expect(drafts[0]).toMatchObject({ field_id: 'f1', field_name: 'Talhão 1', quantity: 10 });
+    expect(drafts[1]).toMatchObject({ field_id: 'f2', field_name: 'Talhão 2', quantity: 15 });
+    expect(drafts.every((draft) => draft.confidence === 0.9)).toBe(true);
+  });
+
+  it('marca a quantidade em falta quando só o total dos talhões foi dito', () => {
+    const drafts = draftsFor([
+      activity({ field_name: 'Talhão 1', quantity: null }),
+      activity({ field_name: 'Talhão 2', quantity: null })
+    ]);
+
+    expect(drafts.map((draft) => draft.missing_fields)).toEqual([['quantity'], ['quantity']]);
+  });
+
+  it('cada talhão mantém a própria data e o próprio tipo', () => {
+    const drafts = draftsFor([
+      activity({ activity_type: 'irrigacao', field_name: 'Talhão 1', occurred_at: '2026-10-05' }),
+      activity({ activity_type: 'plantio', product: 'milho', field_name: 'baixada', occurred_at: null })
+    ]);
+
+    expect(drafts[0]).toMatchObject({ activity_type: 'irrigacao', occurred_at: '2026-10-05' });
+    expect(drafts[1]).toMatchObject({ activity_type: 'plantio', field_id: 'f3', occurred_at: TODAY });
+  });
+
+  it('pergunta sem atividade gera um rascunho em branco', () => {
+    const drafts = draftsFor([], { intent: 'pergunta', question: 'Quando colho?' });
+
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0]).toMatchObject({
+      activity_type: 'outro',
+      product: null,
+      field_id: null,
+      occurred_at: TODAY,
+      missing_fields: []
+    });
   });
 });
 

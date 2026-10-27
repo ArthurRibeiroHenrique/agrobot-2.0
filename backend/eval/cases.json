@@ -214,5 +214,134 @@
     "expected": {
       "intent": "pergunta"
     }
+  },
+  {
+    "id": "varios-talhoes-mesma-aplicacao-em-cada",
+    "transcript": "Ontem passei glifosato no talhão um e no talhão dois, dez litros em cada.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": [
+      {
+        "intent": "registro",
+        "activity_count": 2,
+        "activity_type": "aplicacao",
+        "product": "glifosato",
+        "quantity": 10,
+        "unit": "L",
+        "field_name": "Talhão 1",
+        "occurred_at": "2026-10-06"
+      },
+      {
+        "activity_type": "aplicacao",
+        "product": "glifosato",
+        "quantity": 10,
+        "unit": "L",
+        "field_name": "Talhão 2",
+        "occurred_at": "2026-10-06"
+      }
+    ]
+  },
+  {
+    "id": "varios-talhoes-quantidade-por-talhao",
+    "transcript": "Hoje apliquei quinze litros de fungicida no talhão um e vinte litros no talhão dois.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": [
+      {
+        "intent": "registro",
+        "activity_count": 2,
+        "activity_type": "aplicacao",
+        "product": "fungicida",
+        "quantity": 15,
+        "unit": "L",
+        "field_name": "Talhão 1",
+        "occurred_at": "2026-10-07"
+      },
+      {
+        "activity_type": "aplicacao",
+        "product": "fungicida",
+        "quantity": 20,
+        "unit": "L",
+        "field_name": "Talhão 2",
+        "occurred_at": "2026-10-07"
+      }
+    ]
+  },
+  {
+    "id": "varios-talhoes-total-sem-divisao",
+    "transcript": "Passei quarenta litros de glifosato nos talhões um e dois hoje.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": [
+      {
+        "intent": "registro",
+        "activity_count": 2,
+        "product": "glifosato",
+        "quantity": null,
+        "field_name": "Talhão 1"
+      },
+      {
+        "product": "glifosato",
+        "quantity": null,
+        "field_name": "Talhão 2"
+      }
+    ]
+  },
+  {
+    "id": "varios-talhoes-operacoes-diferentes",
+    "transcript": "Ontem plantei milho na baixada e botei cem quilos de ureia no talhão dois.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": [
+      {
+        "intent": "registro",
+        "activity_count": 2,
+        "activity_type": "plantio",
+        "product": "milho",
+        "field_name": "Baixada",
+        "occurred_at": "2026-10-06"
+      },
+      {
+        "activity_type": "adubacao",
+        "product": "ureia",
+        "quantity": 100,
+        "unit": "kg",
+        "field_name": "Talhão 2",
+        "occurred_at": "2026-10-06"
+      }
+    ]
+  },
+  {
+    "id": "varios-talhoes-datas-diferentes",
+    "transcript": "Irriguei o talhão um anteontem e a baixada hoje.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": [
+      {
+        "intent": "registro",
+        "activity_count": 2,
+        "activity_type": "irrigacao",
+        "field_name": "Talhão 1",
+        "occurred_at": "2026-10-05"
+      },
+      {
+        "activity_type": "irrigacao",
+        "field_name": "Baixada",
+        "occurred_at": "2026-10-07"
+      }
+    ]
+  },
+  {
+    "id": "um-talhao-gera-um-registro",
+    "transcript": "Colhi oitenta sacas de soja no talhão um hoje.",
+    "today": "2026-10-07",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": {
+      "intent": "registro",
+      "activity_count": 1,
+      "field_name": "Talhão 1",
+      "quantity": 80,
+      "unit": "sc"
+    }
   }
 ]

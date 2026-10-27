@@ -6,6 +6,7 @@ import { asyncHandler } from '../utils/async-handler';
 import { HttpError } from '../utils/http-error';
 import { normalizeAudioExtension } from '../utils/audio-format';
 import { getUserId } from '../middlewares/auth';
+import { MAX_ACTIVITIES_PER_VOICE_JOB } from '../schemas/activity.schema';
 import { enqueueVoiceJob } from '../jobs/queue';
 import { removeAudio, uploadAudio } from '../services/storage.service';
 import { answerVoiceJobAsQuestion } from '../services/assistant.service';
@@ -22,6 +23,23 @@ const upload = multer({
     fileSize: 25 * 1024 * 1024
   }
 });
+
+// activities: um item por registro revisado. corrections: formato antigo, um só registro.
+const confirmVoiceJobSchema = z.preprocess(
+  (body) => {
+    const value = (body ?? {}) as Record<string, unknown>;
+
+    return 'activities' in value
+      ? value
+      : { activities: [value.corrections ?? value] };
+  },
+  z.object({
+    activities: z
+      .array(z.record(z.unknown()))
+      .min(1, 'Envie ao menos um registro')
+      .max(MAX_ACTIVITIES_PER_VOICE_JOB)
+  })
+);
 
 const createVoiceJobSchema = z.object({
   client_id: z.string().uuid().optional(),
@@ -125,15 +143,11 @@ voiceRouter.get(
 voiceRouter.post(
   '/voice-jobs/:id/confirm',
   asyncHandler(async (req, res) => {
-    const corrections = req.body?.corrections ?? req.body ?? {};
+    const { activities } = confirmVoiceJobSchema.parse(req.body);
 
-    const activity = await confirmVoiceJob(
-      req.params.id,
-      getUserId(req),
-      corrections
-    );
+    const saved = await confirmVoiceJob(req.params.id, getUserId(req), activities);
 
-    res.status(201).json(activity);
+    res.status(201).json(saved);
   })
 );
 

@@ -2,7 +2,7 @@ import { ActivityDraft, Intent } from '../schemas/activity.schema';
 import { askFromVoice, VoiceAnswer } from './assistant.service';
 import { transcribeAudio } from './transcription.service';
 import { extractActivityFromTranscript } from './extraction.service';
-import { buildDraft, emptyDraft, todayInTimezone } from './draft.service';
+import { buildDrafts, emptyDraft, todayInTimezone } from './draft.service';
 import { listFields } from './farm.service';
 import { findVoiceJobById, updateVoiceJob } from './voice-job.service';
 
@@ -48,20 +48,21 @@ export async function processVoiceJob(
       typeof metadata.timezone === 'string' ? metadata.timezone : null
     );
 
-    let draft: ActivityDraft;
+    // Um rascunho por atividade relatada; a fala pode citar vários talhões.
+    let drafts: ActivityDraft[];
     let intent: Intent = 'registro';
     let answer: VoiceAnswer | null = null;
 
     if (!transcript) {
       // Áudio sem fala: não há o que interpretar.
-      draft = emptyDraft(transcript, today);
+      drafts = [emptyDraft(transcript, today)];
     } else {
       const extraction = await extractActivityFromTranscript(transcript, {
         today,
         fields
       });
 
-      draft = buildDraft(extraction, {
+      drafts = buildDrafts(extraction, {
         transcript,
         fields,
         today,
@@ -88,7 +89,9 @@ export async function processVoiceJob(
     await updateVoiceJob(jobId, {
       status: intent === 'pergunta' ? 'answered' : 'needs_confirmation',
       intent,
-      draft,
+      // draft guarda o primeiro, para versões do aplicativo que só conhecem um rascunho.
+      draft: drafts[0],
+      drafts,
       answer,
       error: null
     });

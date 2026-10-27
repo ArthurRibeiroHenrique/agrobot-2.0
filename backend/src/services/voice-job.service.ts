@@ -10,7 +10,7 @@ const UNIQUE_VIOLATION = '23505';
 
 // Colunas devolvidas ao aplicativo; audio_path e metadata ficam só no servidor.
 const PUBLIC_COLUMNS =
-  'id, client_id, status, intent, transcript, draft, answer, error, activity_id, created_at, updated_at';
+  'id, client_id, status, intent, transcript, draft, drafts, answer, error, activity_id, created_at, updated_at';
 
 // Uma pergunta respondida ainda pode virar registro, se o produtor quiser anotar.
 const CONFIRMABLE_STATUSES = ['needs_confirmation', 'answered'];
@@ -105,10 +105,24 @@ export async function updateVoiceJob(
   return data;
 }
 
+// Rascunhos guardados na gravação. Registros anteriores à lista só têm draft.
+function storedDrafts(job: {
+  draft: unknown;
+  drafts: unknown;
+}): Record<string, unknown>[] {
+  if (Array.isArray(job.drafts) && job.drafts.length > 0) {
+    return job.drafts;
+  }
+
+  return [(job.draft as Record<string, unknown> | null) ?? {}];
+}
+
+// corrections: um item por registro revisado, na ordem dos rascunhos. O produtor
+// pode ter removido rascunhos; cada item já vem com os campos completos do formulário.
 export async function confirmVoiceJob(
   id: string,
   userId: string,
-  corrections: Record<string, unknown>
+  corrections: Record<string, unknown>[]
 ) {
   const job = await getVoiceJob(id, userId);
 
@@ -123,45 +137,51 @@ export async function confirmVoiceJob(
     );
   }
 
-  const draft = job.draft ?? {};
+  const drafts = storedDrafts(job);
 
-  const merged = {
-    ...draft,
-    ...corrections
-  };
+  const parsedDrafts: ActivityDraft[] = corrections.map((item, index) =>
+    activityDraftSchema.parse({
+      ...(drafts[index] ?? drafts[0]),
+      ...item
+    })
+  );
 
-  const parsedDraft: ActivityDraft = activityDraftSchema.parse(merged);
+  const fieldIds = new Set(
+    parsedDrafts.map((draft) => draft.field_id).filter(Boolean) as string[]
+  );
 
-  if (
-    parsedDraft.field_id &&
-    !(await userOwnsField(userId, parsedDraft.field_id))
-  ) {
-    throw new HttpError(400, 'Talhão não encontrado');
+  for (const fieldId of fieldIds) {
+    if (!(await userOwnsField(userId, fieldId))) {
+      throw new HttpError(400, 'Talhão não encontrado');
+    }
   }
 
-  const { data: activity, error: activityError } = await supabaseAdmin
+  // Um único insert: ou todos os registros da gravação são salvos, ou nenhum.
+  const { data: activities, error: activityError } = await supabaseAdmin
     .from('activities')
-    .insert({
-      user_id: userId,
-      voice_job_id: id,
-      activity_type: parsedDraft.activity_type,
-      product: parsedDraft.product,
-      quantity: parsedDraft.quantity,
-      unit: parsedDraft.unit,
-      field_id: parsedDraft.field_id ?? null,
-      field_name: parsedDraft.field_name,
-      occurred_at: parsedDraft.occurred_at,
-      cost: parsedDraft.cost,
-      currency: parsedDraft.currency,
-      confidence: parsedDraft.confidence,
-      raw_transcript: job.transcript ?? parsedDraft.raw_transcript ?? '',
-      status: 'confirmed'
-    })
-    .select()
-    .single();
+    .insert(
+      parsedDrafts.map((draft, index) => ({
+        user_id: userId,
+        voice_job_id: id,
+        draft_index: index,
+        activity_type: draft.activity_type,
+        product: draft.product,
+        quantity: draft.quantity,
+        unit: draft.unit,
+        field_id: draft.field_id ?? null,
+        field_name: draft.field_name,
+        occurred_at: draft.occurred_at,
+        cost: draft.cost,
+        currency: draft.currency,
+        confidence: draft.confidence,
+        raw_transcript: job.transcript ?? draft.raw_transcript ?? '',
+        status: 'confirmed'
+      }))
+    )
+    .select();
 
   if (activityError) {
-    // Índice único em voice_job_id: duas confirmações simultâneas do mesmo rascunho.
+    // Índice único em (voice_job_id, draft_index): duas confirmações simultâneas.
     if (activityError.code === UNIQUE_VIOLATION) {
       throw new HttpError(409, 'Voice job já confirmado');
     }
@@ -169,13 +189,18 @@ export async function confirmVoiceJob(
     throw activityError;
   }
 
+  const saved = [...(activities ?? [])].sort(
+    (a, b) => a.draft_index - b.draft_index
+  );
+
   await updateVoiceJob(id, {
     status: 'confirmed',
-    draft: parsedDraft,
-    activity_id: activity.id
+    draft: parsedDrafts[0],
+    drafts: parsedDrafts,
+    activity_id: saved[0]?.id ?? null
   });
 
-  return activity;
+  return saved;
 }
 
 export async function listActivities(userId: string) {

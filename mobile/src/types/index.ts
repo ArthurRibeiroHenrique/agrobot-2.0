@@ -56,6 +56,8 @@ export type VoiceJob = {
   intent: VoiceIntent | null;
   transcript: string | null;
   draft: Partial<ActivityDraft> | null;
+  // Um rascunho por atividade relatada (ex.: um por talhão). Gravações antigas só têm draft.
+  drafts: Partial<ActivityDraft>[] | null;
   answer: VoiceAnswer | null;
   error: string | null;
   activity_id: string | null;

@@ -20,12 +20,13 @@ export function useVoiceJob(id: string | undefined) {
   });
 }
 
+// Um item por registro revisado: a mesma gravação pode gerar um registro por talhão.
 export function useConfirmVoiceJob(id: string | undefined) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (corrections: Partial<ActivityDraft>) =>
-      apiPost<Activity>(`/voice-jobs/${id}/confirm`, { corrections }),
+    mutationFn: (activities: Partial<ActivityDraft>[]) =>
+      apiPost<Activity[]>(`/voice-jobs/${id}/confirm`, { activities }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE_ATIVIDADES })
   });
 }

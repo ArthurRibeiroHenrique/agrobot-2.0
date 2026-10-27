@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import { buildDraft } from '../src/services/draft.service';
+import { buildDrafts } from '../src/services/draft.service';
 import { extractActivityFromTranscript } from '../src/services/extraction.service';
 import { transcribeBuffer } from '../src/services/transcription.service';
 import { compareCase, EvalValues, FieldResult, summarize } from './compare';
@@ -16,7 +16,8 @@ type EvalCase = {
   audio?: string;
   today: string;
   fields?: string[];
-  expected: EvalValues;
+  // Um objeto quando a fala gera um registro; uma lista, na ordem falada, quando gera vários.
+  expected: EvalValues | EvalValues[];
 };
 
 async function main() {
@@ -45,16 +46,23 @@ async function main() {
       fields
     });
 
-    const draft = buildDraft(extraction, {
+    const drafts = buildDrafts(extraction, {
       transcript,
       fields,
       today: evalCase.today
     });
 
-    const results = compareCase(evalCase.expected, {
-      ...(draft as EvalValues),
-      intent: extraction.intent
-    });
+    const expectedList = Array.isArray(evalCase.expected)
+      ? evalCase.expected
+      : [evalCase.expected];
+
+    const results = expectedList.flatMap((expected, index) =>
+      compareCase(expected, {
+        ...((drafts[index] ?? {}) as EvalValues),
+        intent: extraction.intent,
+        activity_count: drafts.length
+      })
+    );
     const errors = results.filter((result) => !result.correct);
 
     allResults.push(...results);

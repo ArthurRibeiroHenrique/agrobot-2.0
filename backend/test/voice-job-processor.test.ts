@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Extraction } from '../src/schemas/activity.schema';
+import { ExtractedActivity, Extraction } from '../src/schemas/activity.schema';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111';
 const JOB_ID = '22222222-2222-4222-8222-222222222222';
@@ -45,18 +45,22 @@ const ANSWER = {
   reason: 'carencia_ou_seguranca'
 };
 
+const APLICACAO: ExtractedActivity = {
+  activity_type: 'aplicacao',
+  product: 'glifosato',
+  quantity: 20,
+  unit: 'L',
+  field_name: 'Talhão 2',
+  occurred_at: '2026-10-24',
+  cost: null,
+  currency: null
+};
+
 function extraction(overrides: Partial<Extraction> = {}): Extraction {
   return {
     intent: 'registro',
     question: null,
-    activity_type: 'aplicacao',
-    product: 'glifosato',
-    quantity: 20,
-    unit: 'L',
-    field_name: 'Talhão 2',
-    occurred_at: '2026-10-24',
-    cost: null,
-    currency: null,
+    activities: [APLICACAO],
     confidence: 0.9,
     ...overrides
   };
@@ -103,11 +107,7 @@ describe('processVoiceJob por intenção', () => {
       extraction({
         intent: 'pergunta',
         question: 'Quando posso colher o Talhão 2?',
-        activity_type: 'outro',
-        product: null,
-        quantity: null,
-        unit: null,
-        field_name: null
+        activities: []
       })
     );
 
@@ -144,6 +144,31 @@ describe('processVoiceJob por intenção', () => {
       answer: ANSWER,
       draft: expect.objectContaining({ product: 'glifosato' })
     });
+  });
+
+  it('vários talhões: guarda um rascunho por talhão e o primeiro em draft', async () => {
+    mocks.listFields.mockResolvedValue([
+      { id: 'f1', name: 'Talhão 1', crop: 'soja' },
+      { id: 'f2', name: 'Talhão 2', crop: 'milho' }
+    ]);
+    mocks.extractActivityFromTranscript.mockResolvedValue(
+      extraction({
+        activities: [
+          { ...APLICACAO, field_name: 'Talhão 1' },
+          { ...APLICACAO, field_name: 'Talhão 2' }
+        ]
+      })
+    );
+
+    await processVoiceJob(JOB_ID, { isLastAttempt: false });
+
+    const update = finalUpdate();
+
+    expect(update.drafts.map((draft: { field_id: string }) => draft.field_id)).toEqual([
+      'f1',
+      'f2'
+    ]);
+    expect(update.draft).toEqual(update.drafts[0]);
   });
 
   it('incerto: deixa o produtor escolher, sem responder', async () => {
