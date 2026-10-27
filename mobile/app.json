@@ -13,6 +13,10 @@
       "ios",
       "android"
     ],
+    "android": {
+      "package": "com.agrobot.app",
+      "versionCode": 1
+    },
     "plugins": [
       "expo-router",
       [

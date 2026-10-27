@@ -40,4 +40,6 @@ Para o login funcionar, o Supabase precisa enviar o código: por e-mail, o model
 
 Avaliação da IA: `npm run eval` na pasta backend (ver `backend/eval/README.md`).
 
+Gerar o APK para instalar no Android: [docs/12-gerar-apk.md](docs/12-gerar-apk.md).
+
 As rotas ficam em `http://localhost:3333/v1` e exigem o token do Supabase Auth no header `Authorization`.
