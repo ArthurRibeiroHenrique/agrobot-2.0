@@ -15,6 +15,29 @@ tempo todo, por causa do worker da fila (ex.: Railway, Fly.io ou Render no plano
 seguir, confira se `https://SEU-BACKEND/health` responde `{"status":"ok"}` e se todas as migrações de
 `backend/supabase/migrations` foram aplicadas no Supabase.
 
+### Sem hospedagem: túnel gratuito do ngrok
+
+Para testes e apresentações, o backend pode continuar no seu computador: o ngrok cria um endereço
+`https://` fixo que leva até ele. O aplicativo só funciona enquanto o computador estiver ligado, com
+o backend e o túnel abertos.
+
+1. Instale o ngrok (Microsoft Store ou https://ngrok.com/download) e entre na sua conta com
+   `ngrok config add-authtoken SEU_TOKEN` (o token fica em https://dashboard.ngrok.com/get-started/your-authtoken)
+2. Em https://dashboard.ngrok.com/domains, crie o domínio gratuito. A conta gratuita tem direito a
+   um, e ele não muda (ex.: `nome-do-dominio.ngrok-free.app`)
+3. No `backend/.env`, preencha `NGROK_DOMAIN=nome-do-dominio.ngrok-free.app`
+4. Abra `scripts/iniciar-backend-com-tunel.bat`. Ele abre duas janelas: o backend (`npm run dev`) e
+   o túnel (`npm run tunnel`)
+5. Confira no navegador: `https://nome-do-dominio.ngrok-free.app/health`
+6. No passo 3 abaixo, use `EXPO_PUBLIC_API_URL=https://nome-do-dominio.ngrok-free.app/v1`
+
+O domínio é sempre o mesmo, então o APK não precisa ser gerado de novo a cada vez que o túnel abre.
+Se depois o backend for para uma hospedagem, gere um APK novo com a URL do servidor.
+
+Se aparecer `Cannot find file at '..\lib\ngrok\tools\ngrok.exe'`, é um ngrok antigo do Chocolatey
+quebrado no PATH. O `npm run tunnel` já procura o da Microsoft Store primeiro; para limpar, rode
+`choco uninstall ngrok` num terminal como administrador.
+
 ## 2. Conta na Expo e vínculo do projeto
 
 Crie uma conta gratuita em https://expo.dev. Depois, na pasta `mobile`:

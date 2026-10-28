@@ -19,6 +19,11 @@ const TEMPO_LIMITE_POST_MS = 60_000;
 // Envio de áudio pode demorar mais em internet lenta.
 const TEMPO_LIMITE_UPLOAD_MS = 90_000;
 
+// No plano gratuito, o ngrok pode responder com uma página de aviso em vez da API.
+const CABECALHOS_DO_TUNEL: Record<string, string> = API_URL.includes('ngrok')
+  ? { 'ngrok-skip-browser-warning': 'true' }
+  : {};
+
 async function request<T>(
   path: string,
   init: RequestInit = {},
@@ -36,6 +41,7 @@ async function request<T>(
       ...init,
       signal: controle.signal,
       headers: {
+        ...CABECALHOS_DO_TUNEL,
         ...(init.headers ?? {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       }
