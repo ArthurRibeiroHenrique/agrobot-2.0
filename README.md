@@ -40,7 +40,7 @@ Para o login funcionar, o Supabase precisa enviar o código: por e-mail, o model
 
 Avaliação da IA: `npm run eval` na pasta backend (ver `backend/eval/README.md`).
 
-Publicar o backend no Railway: [docs/13-publicar-backend-no-railway.md](docs/13-publicar-backend-no-railway.md).
+Publicar o backend no Coolify: [docs/13-publicar-backend-no-coolify.md](docs/13-publicar-backend-no-coolify.md).
 
 Gerar o APK para instalar no Android: [docs/12-gerar-apk.md](docs/12-gerar-apk.md).
 
