@@ -170,7 +170,7 @@ AgroBot2.0/
 - Supabase (plano gratuito atende o MVP)
 - Provedor de IA para transcrição e LLM (pago por uso)
 - Expo/EAS para gerar os instaladores
-- Hospedagem do backend em contêiner (Railway, Render ou Fly.io)
+- Hospedagem do backend em contêiner, no Railway
 - Provedor de SMS para o OTP por telefone (custo por mensagem)
 - Google Play (taxa única) e Apple Developer (taxa anual), apenas na publicação
 - Sentry (erros) e PostHog (uso), ambos com plano gratuito
