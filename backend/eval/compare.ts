@@ -2,8 +2,10 @@ import { normalizeText, normalizeUnit } from '../src/services/draft.service';
 
 // Campos essenciais da hipótese 2: o que foi feito, com o quê, quanto, onde e quando.
 // intent: se a fala era registro, pergunta, os dois ou incerta.
+// activity_count: quantos registros a fala gerou (ex.: um por talhão citado).
 export const EVAL_FIELDS = [
   'intent',
+  'activity_count',
   'activity_type',
   'product',
   'quantity',
@@ -32,7 +34,7 @@ function sameValue(
     return expected === actual;
   }
 
-  if (field === 'quantity') {
+  if (field === 'quantity' || field === 'activity_count') {
     return Math.abs(Number(expected) - Number(actual)) < 0.001;
   }
 

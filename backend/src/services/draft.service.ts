@@ -1,6 +1,7 @@
 import {
   ActivityDraft,
   ActivityType,
+  ExtractedActivity,
   Extraction,
   isValidDateString
 } from '../schemas/activity.schema';
@@ -67,6 +68,30 @@ export function normalizeUnit(unit: string | null): string | null {
   const key = normalizeText(unit).replace(/\s+/g, '');
 
   return UNIT_ALIASES[key] ?? unit.trim();
+}
+
+// Palavras que não dizem qual foi o insumo: o produto fica em falta para o produtor preencher.
+const VAGUE_PRODUCTS = new Set([
+  'produto',
+  'produtos',
+  'coisa',
+  'negocio',
+  'trem',
+  'insumo'
+]);
+
+const ARTICLES = new Set(['um', 'uma', 'o', 'a', 'aquele', 'aquela', 'esse', 'essa']);
+
+export function cleanProduct(product: string | null): string | null {
+  const trimmed = product?.trim();
+
+  if (!trimmed) return null;
+
+  const words = normalizeText(trimmed)
+    .split(' ')
+    .filter((word) => !ARTICLES.has(word));
+
+  return words.length === 1 && VAGUE_PRODUCTS.has(words[0]) ? null : trimmed;
 }
 
 const SPOKEN_NUMBERS: Record<string, string> = {
@@ -143,44 +168,60 @@ export function emptyDraft(transcript: string, today: string): ActivityDraft {
   };
 }
 
+export type DraftContext = {
+  transcript: string;
+  fields: FieldRef[];
+  today: string;
+  confidence: number;
+  preselectedFieldId?: string | null;
+};
+
+// Pergunta, ou fala sem atividade: o rascunho fica em branco caso o produtor queira anotar.
+const BLANK_ACTIVITY: ExtractedActivity = {
+  activity_type: 'outro',
+  product: null,
+  quantity: null,
+  unit: null,
+  field_name: null,
+  occurred_at: null,
+  cost: null,
+  currency: null
+};
+
 export function buildDraft(
-  extraction: Extraction,
-  context: {
-    transcript: string;
-    fields: FieldRef[];
-    today: string;
-    preselectedFieldId?: string | null;
-  }
+  activity: ExtractedActivity,
+  context: DraftContext
 ): ActivityDraft {
   const preselected =
     context.fields.find((field) => field.id === context.preselectedFieldId) ??
     null;
 
-  const field = matchField(extraction.field_name, context.fields) ?? preselected;
+  const field = matchField(activity.field_name, context.fields) ?? preselected;
 
   // Data não dita, inválida ou no futuro: assume hoje. O produtor revisa na confirmação.
   const occurredAt =
-    extraction.occurred_at &&
-    isValidDateString(extraction.occurred_at) &&
-    extraction.occurred_at <= context.today
-      ? extraction.occurred_at
+    activity.occurred_at &&
+    isValidDateString(activity.occurred_at) &&
+    activity.occurred_at <= context.today
+      ? activity.occurred_at
       : context.today;
 
   const draft: ActivityDraft = {
-    activity_type: extraction.activity_type,
-    product: extraction.product?.trim() || null,
-    quantity: extraction.quantity,
-    unit: normalizeUnit(extraction.unit),
+    activity_type: activity.activity_type,
+    product: cleanProduct(activity.product),
+    // A IA às vezes devolve 0 ou "" para o que não foi dito.
+    quantity: activity.quantity || null,
+    unit: normalizeUnit(activity.unit),
     field_id: field?.id ?? null,
-    field_name: field?.name ?? extraction.field_name?.trim() ?? null,
+    field_name: field?.name ?? (activity.field_name?.trim() || null),
     occurred_at: occurredAt,
-    cost: extraction.cost,
-    currency: extraction.cost !== null ? extraction.currency || 'BRL' : null,
-    confidence: Math.min(1, Math.max(0, extraction.confidence)),
+    cost: activity.cost,
+    currency: activity.cost !== null ? activity.currency || 'BRL' : null,
+    confidence: Math.min(1, Math.max(0, context.confidence)),
     raw_transcript: context.transcript
   };
 
-  const missing = REQUIRED_FIELDS[extraction.activity_type].filter(
+  const missing = REQUIRED_FIELDS[activity.activity_type].filter(
     (name) => draft[name] === null || draft[name] === undefined
   );
 
@@ -192,4 +233,17 @@ export function buildDraft(
   draft.missing_fields = missing;
 
   return draft;
+}
+
+// Um rascunho por atividade relatada (ex.: um por talhão). Sempre devolve ao menos um.
+export function buildDrafts(
+  extraction: Extraction,
+  context: Omit<DraftContext, 'confidence'>
+): ActivityDraft[] {
+  const activities =
+    extraction.activities.length > 0 ? extraction.activities : [BLANK_ACTIVITY];
+
+  return activities.map((activity) =>
+    buildDraft(activity, { ...context, confidence: extraction.confidence })
+  );
 }

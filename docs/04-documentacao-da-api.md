@@ -88,4 +88,19 @@ Campos devolvidos em `draft`: `activity_type`, `product`, `quantity`, `unit`, `f
 - `field_id`: preenchido quando o talhão falado bate com um talhão cadastrado
 - `missing_fields`: campos obrigatórios para aquele tipo de atividade que não ficaram claros na fala
 
-Na confirmação, o aplicativo envia `{ "corrections": { ... } }` com os campos revisados.
+### Vários talhões na mesma gravação
+
+Uma fala pode relatar trabalho em mais de um talhão ("passei glifosato no talhão 1 e no talhão 2") ou
+operações diferentes ("plantei milho na baixada e adubei o talhão 2"). O LLM devolve uma atividade por
+talhão e o job traz `drafts`, uma lista de rascunhos na ordem falada. `draft` continua com o primeiro
+rascunho, para gravações antigas e versões antigas do aplicativo.
+
+- Quantidade ou custo dito por talhão ("10 litros no 1 e 15 no 2") ou "em cada": vai em cada rascunho
+- Um total único para vários talhões ("40 litros nos talhões 1 e 2"): a IA não divide; `quantity` fica
+  nula e aparece em `missing_fields` para o produtor informar
+- Cada rascunho tem a própria data e o próprio tipo de atividade
+
+Na confirmação, o aplicativo envia `{ "activities": [ { ... }, { ... } ] }`, um item por registro
+revisado (o produtor pode remover rascunhos antes de salvar). A resposta é a lista das atividades
+criadas, todas com o mesmo `voice_job_id`; ou todas são salvas, ou nenhuma. O formato antigo,
+`{ "corrections": { ... } }`, continua aceito e salva um único registro.

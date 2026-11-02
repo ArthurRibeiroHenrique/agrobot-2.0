@@ -28,10 +28,14 @@ Cada caso tem:
   (testa transcrição + interpretação)
 - `today`: a data em que a frase foi dita, para resolver "ontem" e "hoje"
 - `fields`: talhões cadastrados daquele produtor
-- `expected`: o resultado correto. Só os campos listados são avaliados
+- `expected`: o resultado correto. Só os campos listados são avaliados. Quando a fala gera vários
+  registros (por exemplo, um por talhão citado), `expected` é uma lista, na ordem em que foram falados
 
-Campos avaliados: `intent`, `activity_type`, `product`, `quantity`, `unit`, `field_name`,
-`occurred_at`.
+Campos avaliados: `intent`, `activity_count`, `activity_type`, `product`, `quantity`, `unit`,
+`field_name`, `occurred_at`.
+
+`activity_count` mede se a IA separou a fala no número certo de registros (um por talhão). Nos casos
+em lista, `intent` e `activity_count` ficam só no primeiro item, para não contarem em dobro.
 
 `intent` mede se a IA entendeu o que o produtor quis: `registro` (anotar no diário), `pergunta`,
 `ambos` ou `incerto` (o app pergunta ao produtor).

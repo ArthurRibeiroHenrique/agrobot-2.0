@@ -20,6 +20,11 @@
     "expected": { "needs_technician": false }
   },
   {
+    "id": "geral-epoca-plantio-milho",
+    "question": "Qual a melhor época para plantar milho?",
+    "expected": { "needs_technician": false }
+  },
+  {
     "id": "fora-do-escopo",
     "question": "Quem ganhou o jogo do Grêmio ontem?",
     "expected": { "needs_technician": false, "reason": "fora_do_escopo" }

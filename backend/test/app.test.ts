@@ -182,6 +182,50 @@ describe('GET /v1/voice-jobs/:id', () => {
   });
 });
 
+describe('POST /v1/voice-jobs/:id/confirm', () => {
+  it('salva um registro por talhão revisado', async () => {
+    mocks.confirmVoiceJob.mockResolvedValue([{ id: 'a1' }, { id: 'a2' }]);
+
+    const activities = [
+      { field_name: 'Talhão 1', quantity: 10 },
+      { field_name: 'Talhão 2', quantity: 15 }
+    ];
+
+    const res = await request(app)
+      .post(`/v1/voice-jobs/${JOB_ID}/confirm`)
+      .set(auth)
+      .send({ activities });
+
+    expect(res.status).toBe(201);
+    expect(res.body).toHaveLength(2);
+    expect(mocks.confirmVoiceJob).toHaveBeenCalledWith(JOB_ID, USER_ID, activities);
+  });
+
+  it('aceita o formato antigo, com um só registro em corrections', async () => {
+    mocks.confirmVoiceJob.mockResolvedValue([{ id: 'a1' }]);
+
+    const res = await request(app)
+      .post(`/v1/voice-jobs/${JOB_ID}/confirm`)
+      .set(auth)
+      .send({ corrections: { product: 'glifosato' } });
+
+    expect(res.status).toBe(201);
+    expect(mocks.confirmVoiceJob).toHaveBeenCalledWith(JOB_ID, USER_ID, [
+      { product: 'glifosato' }
+    ]);
+  });
+
+  it('recusa lista vazia de registros', async () => {
+    const res = await request(app)
+      .post(`/v1/voice-jobs/${JOB_ID}/confirm`)
+      .set(auth)
+      .send({ activities: [] });
+
+    expect(res.status).toBe(400);
+    expect(mocks.confirmVoiceJob).not.toHaveBeenCalled();
+  });
+});
+
 describe('POST /v1/voice-jobs/:id/ask', () => {
   it('responde a gravação como pergunta para o dono', async () => {
     mocks.answerVoiceJobAsQuestion.mockResolvedValue({ id: JOB_ID, status: 'answered' });

@@ -88,4 +88,13 @@ describe('buildAssistantPrompt', () => {
     expect(prompt).toContain('- 2026-10-06, adubacao, ureia, 200 kg, Talhão 2');
     expect(prompt).toContain('Apliquei glifosato hoje no talhão 2');
   });
+
+  it('inclui o local da propriedade quando cadastrado', () => {
+    const base = { today: '2026-10-24', fields: [], activities: [] };
+
+    expect(buildAssistantPrompt({ ...base, location: 'Chapecó - SC' })).toContain(
+      'Local da propriedade: Chapecó - SC.'
+    );
+    expect(buildAssistantPrompt(base)).toContain('Local da propriedade: não informado.');
+  });
 });

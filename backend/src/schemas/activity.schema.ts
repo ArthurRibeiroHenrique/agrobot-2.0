@@ -43,9 +43,7 @@ const dateOrNull = z
 
 // Formato pedido ao LLM. A saída estruturada exige todos os campos presentes,
 // por isso o que não foi dito vem como null em vez de ausente.
-export const extractionSchema = z.object({
-  intent: z.enum(INTENTS),
-  question: z.string().nullable(),
+export const extractedActivitySchema = z.object({
   activity_type: z.enum(ACTIVITY_TYPES),
   product: z.string().nullable(),
   quantity: z.number().nullable(),
@@ -53,11 +51,23 @@ export const extractionSchema = z.object({
   field_name: z.string().nullable(),
   occurred_at: z.string().nullable(),
   cost: z.number().nullable(),
-  currency: z.string().nullable(),
+  currency: z.string().nullable()
+});
+
+export type ExtractedActivity = z.infer<typeof extractedActivitySchema>;
+
+// Uma fala pode relatar o trabalho em vários talhões: vem um item por talhão.
+export const extractionSchema = z.object({
+  intent: z.enum(INTENTS),
+  question: z.string().nullable(),
+  activities: z.array(extractedActivitySchema),
   confidence: z.number()
 });
 
 export type Extraction = z.infer<typeof extractionSchema>;
+
+// Limite de registros confirmados de uma só gravação.
+export const MAX_ACTIVITIES_PER_VOICE_JOB = 20;
 
 export const activityDraftSchema = z
   .object({
