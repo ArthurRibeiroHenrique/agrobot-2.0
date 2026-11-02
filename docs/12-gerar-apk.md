@@ -10,33 +10,11 @@ O APK instalado não consegue falar com o backend rodando no seu computador:
 - fora da sua rede Wi-Fi, o IP do computador (ex.: `192.168.0.10`) não existe
 - o Android bloqueia endereços `http://` no aplicativo instalado; é preciso `https://`
 
-Por isso o backend precisa estar hospedado em um serviço com HTTPS que mantenha o processo ligado o
-tempo todo, por causa do worker da fila (ex.: Railway, Fly.io ou Render no plano pago). Antes de
-seguir, confira se `https://SEU-BACKEND/health` responde `{"status":"ok"}` e se todas as migrações de
+Por isso o backend fica hospedado no Railway, que oferece HTTPS e mantém o processo ligado o tempo
+todo, como o worker da fila precisa. Siga o guia
+[Como publicar o backend no Railway](13-publicar-backend-no-railway.md). Antes de seguir, confira se
+`https://SEU-BACKEND.up.railway.app/health` responde `{"status":"ok"}` e se todas as migrações de
 `backend/supabase/migrations` foram aplicadas no Supabase.
-
-### Sem hospedagem: túnel gratuito do ngrok
-
-Para testes e apresentações, o backend pode continuar no seu computador: o ngrok cria um endereço
-`https://` fixo que leva até ele. O aplicativo só funciona enquanto o computador estiver ligado, com
-o backend e o túnel abertos.
-
-1. Instale o ngrok (Microsoft Store ou https://ngrok.com/download) e entre na sua conta com
-   `ngrok config add-authtoken SEU_TOKEN` (o token fica em https://dashboard.ngrok.com/get-started/your-authtoken)
-2. Em https://dashboard.ngrok.com/domains, crie o domínio gratuito. A conta gratuita tem direito a
-   um, e ele não muda (ex.: `nome-do-dominio.ngrok-free.app`)
-3. No `backend/.env`, preencha `NGROK_DOMAIN=nome-do-dominio.ngrok-free.app`
-4. Abra `scripts/iniciar-backend-com-tunel.bat`. Ele abre duas janelas: o backend (`npm run dev`) e
-   o túnel (`npm run tunnel`)
-5. Confira no navegador: `https://nome-do-dominio.ngrok-free.app/health`
-6. No passo 3 abaixo, use `EXPO_PUBLIC_API_URL=https://nome-do-dominio.ngrok-free.app/v1`
-
-O domínio é sempre o mesmo, então o APK não precisa ser gerado de novo a cada vez que o túnel abre.
-Se depois o backend for para uma hospedagem, gere um APK novo com a URL do servidor.
-
-Se aparecer `Cannot find file at '..\lib\ngrok\tools\ngrok.exe'`, é um ngrok antigo do Chocolatey
-quebrado no PATH. O `npm run tunnel` já procura o da Microsoft Store primeiro; para limpar, rode
-`choco uninstall ngrok` num terminal como administrador.
 
 ## 2. Conta na Expo e vínculo do projeto
 
@@ -56,7 +34,7 @@ arquivos ignorados. As variáveis precisam ser cadastradas no EAS, para o ambien
 nome usado no perfil do `eas.json`):
 
 ```
-npx eas-cli@latest env:create --environment preview --visibility plaintext --name EXPO_PUBLIC_API_URL --value https://SEU-BACKEND/v1
+npx eas-cli@latest env:create --environment preview --visibility plaintext --name EXPO_PUBLIC_API_URL --value https://SEU-BACKEND.up.railway.app/v1
 npx eas-cli@latest env:create --environment preview --visibility plaintext --name EXPO_PUBLIC_SUPABASE_URL --value https://SEU-PROJETO.supabase.co
 npx eas-cli@latest env:create --environment preview --visibility plaintext --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value SUA_CHAVE_ANON
 ```

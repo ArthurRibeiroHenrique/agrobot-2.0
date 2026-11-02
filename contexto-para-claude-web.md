@@ -123,7 +123,7 @@ Estados da tarefa: `queued → transcribing → extracting → needs_confirmatio
 - Fila offline persistente (hoje, sem internet, a gravação se perde ao fechar o aplicativo).
 - Edição de atividade, painel da cooperativa, convites e consentimento (LGPD).
 - Monitoramento de erros (Sentry) e métricas de uso (PostHog).
-- Hospedagem do backend na nuvem (opções avaliadas: Railway, Render ou Fly.io). Hoje roda localmente.
+- Hospedagem do backend na nuvem, no Railway (escolhido; publicação ainda pendente). Hoje roda localmente.
 
 Etapas do plano: 1) base do backend (feita); 2) fluxo de voz ponta a ponta (feita);
 3) carência, alertas e assistente; 4) modo offline; 5) piloto com cinco produtores; 6) módulo da cooperativa.
