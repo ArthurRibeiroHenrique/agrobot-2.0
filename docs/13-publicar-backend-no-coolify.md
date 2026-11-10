@@ -22,8 +22,9 @@ O código já está pronto: o Coolify usa o `backend/Dockerfile`. A API e o work
 Crie a conta em https://www.oracle.com/cloud/free/.
 
 A **região inicial (home region) não pode ser trocada depois**, e o plano gratuito só cria servidores
-nela. Escolha uma região do Brasil, como `Brazil East (Sao Paulo)`, que fica perto do Supabase e dos
-usuários.
+nela. Escolha `Brazil East (Sao Paulo)`, que fica perto dos usuários. O projeto atual do Supabase está
+nos Estados Unidos (`us-east-1`), o que acrescenta uma pequena demora a cada consulta ao banco. Ela
+só deixaria de existir com a migração do Supabase para `sa-east-1`.
 
 ## 2. Criar o servidor
 

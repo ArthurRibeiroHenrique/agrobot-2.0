@@ -11,6 +11,8 @@ fica salvo de forma estruturada. Todo o sistema é construído em código (TypeS
 - api: especificação da API
 - scripts: atalhos para instalar e iniciar
 
+Visão completa do projeto, em um só documento: [docs/14-documentacao-completa-do-projeto.md](docs/14-documentacao-completa-do-projeto.md).
+
 A arquitetura completa está em [docs/10-proposta-arquitetura-sem-n8n.md](docs/10-proposta-arquitetura-sem-n8n.md).
 
 ## Como rodar
