@@ -10,11 +10,11 @@ O APK instalado não consegue falar com o backend rodando no seu computador:
 - fora da sua rede Wi-Fi, o IP do computador (ex.: `192.168.0.10`) não existe
 - o Android bloqueia endereços `http://` no aplicativo instalado; é preciso `https://`
 
-Por isso o backend fica hospedado no Coolify, em um servidor do plano Oracle Always Free, que oferece
-HTTPS e mantém o processo ligado o tempo todo, como o worker da fila precisa. Siga o guia
-[Como publicar o backend no Coolify](13-publicar-backend-no-coolify.md). Antes de seguir, confira se
-`https://SEU-BACKEND.duckdns.org/health` responde `{"status":"ok"}` e se todas as migrações de
-`backend/supabase/migrations` foram aplicadas no Supabase.
+Por isso o backend fica hospedado no Azure Container Apps, que oferece HTTPS e liga sozinho quando o
+aplicativo faz uma requisição. Siga o guia
+[Como publicar o backend no Azure](13-publicar-backend-no-azure.md). Antes de seguir, confira se
+`https://agrobot-api.salmongrass-51b1b27e.northcentralus.azurecontainerapps.io/health` responde
+`{"status":"ok"}` e se todas as migrações de `backend/supabase/migrations` foram aplicadas no Supabase.
 
 ## 2. Conta na Expo e vínculo do projeto
 
@@ -34,7 +34,7 @@ arquivos ignorados. As variáveis precisam ser cadastradas no EAS, para o ambien
 nome usado no perfil do `eas.json`):
 
 ```
-npx eas-cli@latest env:create --environment preview --visibility plaintext --name EXPO_PUBLIC_API_URL --value https://SEU-BACKEND.duckdns.org/v1
+npx eas-cli@latest env:create --environment preview --visibility plaintext --name EXPO_PUBLIC_API_URL --value https://agrobot-api.salmongrass-51b1b27e.northcentralus.azurecontainerapps.io/v1
 npx eas-cli@latest env:create --environment preview --visibility plaintext --name EXPO_PUBLIC_SUPABASE_URL --value https://SEU-PROJETO.supabase.co
 npx eas-cli@latest env:create --environment preview --visibility plaintext --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value SUA_CHAVE_ANON
 ```
@@ -43,8 +43,8 @@ Cuidados:
 
 - As variáveis `EXPO_PUBLIC_*` ficam gravadas dentro do APK no momento do build. Se mudar alguma,
   gere o APK de novo
-- Só a chave **anon** do Supabase pode ir para o aplicativo. A `SUPABASE_SERVICE_ROLE_KEY` e a
-  `OPENAI_API_KEY` ficam só no servidor do backend
+- Só a chave **anon** (ou *publishable*) do Supabase pode ir para o aplicativo. A
+  `SUPABASE_SERVICE_ROLE_KEY` e as chaves do Azure OpenAI ficam só no servidor do backend
 - Sem `EXPO_PUBLIC_SUPABASE_URL`, o aplicativo fecha logo ao abrir. Sem `EXPO_PUBLIC_API_URL`, ele
   tenta `localhost` e mostra "Sem conexão com o servidor"
 

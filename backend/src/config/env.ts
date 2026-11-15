@@ -35,7 +35,9 @@ const envSchema = z
       .enum(['true', 'false'])
       .default('true')
       .transform((value) => value === 'true'),
-    ALLOWED_ORIGINS: z.string().default('http://localhost:3000')
+    ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
+    // Máximo de chamadas de IA (áudios e perguntas) por usuário a cada hora.
+    AI_RATE_LIMIT_PER_HOUR: z.coerce.number().int().positive().default(60)
   })
   .superRefine((value, ctx) => {
     const required: Array<[keyof typeof value, string]> =

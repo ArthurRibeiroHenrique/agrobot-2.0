@@ -5,6 +5,7 @@ import morgan from 'morgan';
 
 import { env } from './config/env';
 import { requireAuth } from './middlewares/auth';
+import { createAiRateLimit } from './middlewares/ai-rate-limit';
 import { errorHandler, notFoundHandler } from './middlewares/error-handler';
 import { healthRouter } from './routes/health.routes';
 import { voiceRouter } from './routes/voice.routes';
@@ -32,6 +33,13 @@ export function createApp() {
   const v1 = express.Router();
 
   v1.use(requireAuth);
+
+  // Só as rotas que chamam a IA contam no limite.
+  v1.post(
+    ['/voice-jobs', '/voice-jobs/:id/ask', '/assistant/messages'],
+    createAiRateLimit({ limit: env.AI_RATE_LIMIT_PER_HOUR, windowMs: 60 * 60 * 1000 })
+  );
+
   v1.use('/', voiceRouter);
   v1.use('/', activitiesRouter);
   v1.use('/', farmsRouter);
