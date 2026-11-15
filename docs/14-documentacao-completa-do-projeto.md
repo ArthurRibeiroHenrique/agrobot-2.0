@@ -262,6 +262,7 @@ O produtor pode perguntar por texto (aba **Perguntar**) ou por voz (na mesma gra
 | `DATABASE_URL` | Conexão do PostgreSQL para a fila (Session pooler, porta 5432) | obrigatória |
 | `RUN_WORKER` | `true`: API e worker juntos; `false`: worker à parte | `true` |
 | `ALLOWED_ORIGINS` | Origens permitidas no CORS, separadas por vírgula | `http://localhost:3000` |
+| `AI_RATE_LIMIT_PER_HOUR` | Máximo de chamadas de IA (áudios e perguntas) por usuário por hora; acima disso, erro 429 | `60` |
 
 A API não inicia se uma variável obrigatória faltar: o erro diz qual é.
 
@@ -370,7 +371,7 @@ Detalhes em [03-documentacao-do-app.md](03-documentacao-do-app.md).
 
 ### Testes automatizados
 
-`npm test` na pasta `backend` roda 58 testes (Vitest + Supertest), sem chamar a IA nem o Supabase
+`npm test` na pasta `backend` roda 61 testes (Vitest + Supertest), sem chamar a IA nem o Supabase
 de verdade:
 
 | Arquivo | O que cobre |
@@ -379,6 +380,7 @@ de verdade:
 | `draft.test.ts` | Unidades, talhões, datas, produtos vagos, campos faltantes, vários talhões |
 | `voice-job-processor.test.ts` | Etapas do worker, intenção, novas tentativas e falha final |
 | `assistant.test.ts` | Regras de segurança do assistente |
+| `ai-rate-limit.test.ts` | Limite de chamadas de IA por usuário |
 
 ### Avaliação da IA
 
