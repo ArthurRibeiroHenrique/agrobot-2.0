@@ -71,8 +71,8 @@ em código (pg-boss) que roda sobre o próprio banco PostgreSQL do Supabase.
 | Backend (API + worker) | Node.js + Express, em TypeScript |
 | Fila de processamento | pg-boss, sobre o PostgreSQL |
 | Banco, login e arquivos | Supabase: PostgreSQL, Auth (login por código) e Storage (áudios) |
-| Transcrição de voz | OpenAI (`gpt-4o-mini-transcribe`) |
-| Interpretação da fala | Modelo de linguagem da OpenAI (`gpt-5-mini`) com saída estruturada validada por esquema Zod; o modelo é configurável |
+| Transcrição de voz | Azure OpenAI (`gpt-4o-mini-transcribe`), na nuvem da Microsoft |
+| Interpretação da fala | Modelo de linguagem no Azure OpenAI (`gpt-5-mini`) com saída estruturada validada por esquema Zod; o modelo é configurável |
 | Testes | Vitest e Supertest (24 testes automatizados) |
 | Avaliação da IA | Comando `npm run eval`, que mede o acerto por campo |
 
@@ -81,7 +81,7 @@ em código (pg-boss) que roda sobre o próprio banco PostgreSQL do Supabase.
 ```
 Aplicativo (Expo) ──HTTPS + token──► API (Express) ──► Supabase (Auth, PostgreSQL, Storage)
                                          │
-                                         └─ fila pg-boss ─► Worker ─► OpenAI (transcrição e interpretação)
+                                         └─ fila pg-boss ─► Worker ─► Azure OpenAI (transcrição e interpretação)
 ```
 
 - O login por código (e-mail ou SMS) é feito pelo aplicativo direto no Supabase Auth. A API
@@ -141,7 +141,7 @@ Etapas do plano: 1) base do backend (feita); 2) fluxo de voz ponta a ponta (feit
 - **Sai:** hospedagem e manutenção do N8N.
 - **Entra ou permanece:**
   - Supabase (o plano gratuito atende o MVP; projetos parados por cerca de uma semana são pausados).
-  - APIs de IA da OpenAI, pagas por uso (transcrição e interpretação).
+  - IA no Azure OpenAI, paga por uso (transcrição e interpretação). Na fase acadêmica, coberta pelos créditos do Azure for Students.
   - Hospedagem do backend, quando for publicado.
   - SMS para login por celular (opcional; o login por e-mail é gratuito).
   - Publicação: Google Play cobra uma **taxa única**, e a Apple, uma **taxa anual**.

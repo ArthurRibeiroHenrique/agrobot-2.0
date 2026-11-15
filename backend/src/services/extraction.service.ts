@@ -1,7 +1,6 @@
 import { zodResponseFormat } from 'openai/helpers/zod';
 
-import { openai } from '../lib/openai';
-import { env } from '../config/env';
+import { aiModels, openai } from '../lib/openai';
 import {
   ACTIVITY_TYPES,
   Extraction,
@@ -62,7 +61,7 @@ export async function extractActivityFromTranscript(
   context: ExtractionContext
 ): Promise<Extraction> {
   const completion = await openai.beta.chat.completions.parse({
-    model: env.OPENAI_LLM_MODEL,
+    model: aiModels.llm,
     // Modelos de raciocínio não aceitam temperature; esforço baixo reduz custo e espera.
     reasoning_effort: 'low',
     response_format: zodResponseFormat(extractionSchema, 'atividade_agricola'),

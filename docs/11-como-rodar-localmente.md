@@ -14,7 +14,8 @@ são para o Windows (PowerShell ou Prompt de Comando).
 Você também precisa de contas e chaves de dois serviços:
 
 - **Supabase**: banco de dados, login e armazenamento dos áudios
-- **OpenAI**: transcrição e interpretação da fala (a chave gera custo por uso)
+- **Azure OpenAI**: transcrição e interpretação da fala (gera custo por uso). Também funciona com a
+  API da OpenAI direto, trocando `AI_PROVIDER` para `openai`
 
 O celular e o computador precisam estar na **mesma rede Wi-Fi**.
 
@@ -46,7 +47,10 @@ Abra o arquivo `backend/.env` e preencha:
 
 | Variável | Onde pegar |
 | --- | --- |
-| `OPENAI_API_KEY` | Painel da OpenAI > API keys |
+| `AZURE_OPENAI_ENDPOINT` e `AZURE_OPENAI_API_KEY` | Portal do Azure > recurso do Azure OpenAI > Keys and Endpoint |
+| `AZURE_OPENAI_TRANSCRIPTION_DEPLOYMENT` e `AZURE_OPENAI_LLM_DEPLOYMENT` | Azure AI Foundry > Deployments: o nome que você deu a cada deployment |
+| `AZURE_OPENAI_TRANSCRIPTION_ENDPOINT` e `AZURE_OPENAI_TRANSCRIPTION_API_KEY` | Só se a transcrição estiver em outro recurso (outra região). Em branco, usa os de cima |
+| `OPENAI_API_KEY` | Só com `AI_PROVIDER=openai`: painel da OpenAI > API keys |
 | `SUPABASE_URL` | Supabase > Project Settings > API > Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase > Project Settings > API > `service_role` (**secreta**, só no backend) |
 | `DATABASE_URL` | Supabase > Connect > **Session pooler** (porta 5432). Não use o Transaction pooler (6543) |
@@ -118,10 +122,10 @@ Na pasta `backend`:
 
 | Comando | O que faz |
 | --- | --- |
-| `npm test` | Roda os testes (não usa OpenAI nem Supabase) |
+| `npm test` | Roda os testes (não usa a IA nem o Supabase) |
 | `npm run typecheck` | Procura erros de tipos no código |
-| `npm run eval` | Mede se a IA interpreta bem as falas e a intenção (usa a OpenAI, gera custo) |
-| `npm run eval:assistant` | Mede se o assistente encaminha ao técnico quando deve (usa a OpenAI) |
+| `npm run eval` | Mede se a IA interpreta bem as falas e a intenção (usa a IA, gera custo) |
+| `npm run eval:assistant` | Mede se o assistente encaminha ao técnico quando deve (usa a IA) |
 
 Na pasta `mobile`:
 
