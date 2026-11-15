@@ -42,6 +42,8 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: cores.fundo }
         }}
       >
+        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+
         <Stack.Protected guard={!logado}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack.Protected>
