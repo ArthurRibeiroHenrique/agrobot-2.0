@@ -80,8 +80,8 @@ Todo o sistema é escrito em **TypeScript**, no aplicativo e no backend.
 | Validação de dados | Zod (entrada da API, variáveis de ambiente e saída da IA) |
 | Fila de processamento | pg-boss, sobre o próprio PostgreSQL |
 | Banco, login e arquivos | Supabase: PostgreSQL, Auth (login por código) e Storage (áudios) |
-| Transcrição | OpenAI `gpt-4o-mini-transcribe` |
-| Interpretação e assistente | OpenAI `gpt-5-mini` com saída estruturada; o modelo é configurável |
+| Transcrição | Azure OpenAI `gpt-4o-mini-transcribe` (a OpenAI direta continua como alternativa) |
+| Interpretação e assistente | Azure OpenAI `gpt-5-mini` com saída estruturada; o modelo é configurável |
 | Testes | Vitest e Supertest |
 | Publicação do backend | Docker, Coolify, VPS Oracle Always Free e DuckDNS |
 | Geração do APK | EAS Build (Expo) |
@@ -101,7 +101,7 @@ Todo o sistema é escrito em **TypeScript**, no aplicativo e no backend.
                                        └──────────────────┘           │
                                                 ▲                      ▼
                                                 │             ┌─────────────────┐
-                                                └──────────── │ Worker          │ ──► OpenAI
+                                                └──────────── │ Worker          │ ──► Azure OpenAI
                                                               │ (transcrição e  │     (transcrição,
                                                               │  interpretação) │      interpretação,
                                                               └─────────────────┘      assistente)
@@ -131,7 +131,7 @@ AgroBot2.0/
 │   │   ├── app.ts              Monta o Express: segurança, rotas e erros
 │   │   ├── config/env.ts       Lê e valida as variáveis de ambiente
 │   │   ├── jobs/queue.ts       Fila pg-boss: criação, envio e consumo
-│   │   ├── lib/                Clientes da OpenAI e do Supabase
+│   │   ├── lib/                Clientes da IA (Azure OpenAI ou OpenAI) e do Supabase
 │   │   ├── middlewares/        Autenticação e tratamento de erros
 │   │   ├── routes/             Rotas HTTP
 │   │   ├── schemas/            Esquemas Zod (atividade, assistente, propriedade)
@@ -246,9 +246,16 @@ O produtor pode perguntar por texto (aba **Perguntar**) ou por voz (na mesma gra
 | Variável | Para que serve | Padrão |
 | --- | --- | --- |
 | `PORT` | Porta da API | `3333` |
-| `OPENAI_API_KEY` | Chave da OpenAI | obrigatória |
-| `OPENAI_TRANSCRIPTION_MODEL` | Modelo de transcrição | `gpt-4o-mini-transcribe` |
-| `OPENAI_LLM_MODEL` | Modelo de interpretação e do assistente | `gpt-5-mini` |
+| `AI_PROVIDER` | Onde a IA roda: `azure` (Azure OpenAI) ou `openai` (OpenAI direta) | `openai` |
+| `AZURE_OPENAI_ENDPOINT` | Endereço do recurso Azure OpenAI da interpretação | obrigatória com `azure` |
+| `AZURE_OPENAI_API_KEY` | Chave desse recurso | obrigatória com `azure` |
+| `AZURE_OPENAI_API_VERSION` | Versão da API do Azure OpenAI | `2025-04-01-preview` |
+| `AZURE_OPENAI_LLM_DEPLOYMENT` | Deployment de interpretação e do assistente | `gpt-5-mini` |
+| `AZURE_OPENAI_TRANSCRIPTION_DEPLOYMENT` | Deployment de transcrição | `gpt-4o-mini-transcribe` |
+| `AZURE_OPENAI_TRANSCRIPTION_ENDPOINT` e `AZURE_OPENAI_TRANSCRIPTION_API_KEY` | Recurso da transcrição, quando fica em outra região; em branco, usa o de cima | vazio |
+| `OPENAI_API_KEY` | Chave da OpenAI | obrigatória com `openai` |
+| `OPENAI_TRANSCRIPTION_MODEL` | Modelo de transcrição na OpenAI | `gpt-4o-mini-transcribe` |
+| `OPENAI_LLM_MODEL` | Modelo de interpretação na OpenAI | `gpt-5-mini` |
 | `SUPABASE_URL` | Endereço do projeto Supabase | obrigatória |
 | `SUPABASE_SERVICE_ROLE_KEY` | Chave de serviço (só no backend) | obrigatória |
 | `SUPABASE_AUDIO_BUCKET` | Bucket dos áudios | `voice-audio` |
@@ -363,7 +370,7 @@ Detalhes em [03-documentacao-do-app.md](03-documentacao-do-app.md).
 
 ### Testes automatizados
 
-`npm test` na pasta `backend` roda 55 testes (Vitest + Supertest), sem chamar a OpenAI nem o Supabase
+`npm test` na pasta `backend` roda 58 testes (Vitest + Supertest), sem chamar a IA nem o Supabase
 de verdade:
 
 | Arquivo | O que cobre |
@@ -375,7 +382,7 @@ de verdade:
 
 ### Avaliação da IA
 
-Chama a OpenAI de verdade, por isso tem custo. Rode sempre que mudar prompt, modelo ou regras do
+Chama a IA de verdade (Azure OpenAI ou OpenAI, conforme o `AI_PROVIDER`), por isso tem custo. Rode sempre que mudar prompt, modelo ou regras do
 rascunho.
 
 | Comando | Casos | Meta |
@@ -489,7 +496,7 @@ métricas de uso (PostHog).
 | Item | Custo |
 | --- | --- |
 | Supabase | Plano gratuito atende o MVP (projetos parados por cerca de uma semana são pausados) |
-| OpenAI | Pago por uso; estimativa de R$ 0,90 a R$ 4,50 por produtor ativo/mês (transcrição + interpretação) |
+| Azure OpenAI | Pago por uso (na fase acadêmica, sai dos créditos do Azure for Students); estimativa de R$ 0,90 a R$ 4,50 por produtor ativo/mês (transcrição + interpretação) |
 | Servidor do backend | Gratuito na Oracle Always Free |
 | Endereço (DuckDNS) | Gratuito |
 | SMS de login | Opcional; o login por e-mail é gratuito |
