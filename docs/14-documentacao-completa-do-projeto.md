@@ -83,7 +83,7 @@ Todo o sistema é escrito em **TypeScript**, no aplicativo e no backend.
 | Transcrição | Azure OpenAI `gpt-4o-mini-transcribe` (a OpenAI direta continua como alternativa) |
 | Interpretação e assistente | Azure OpenAI `gpt-5-mini` com saída estruturada; o modelo é configurável |
 | Testes | Vitest e Supertest |
-| Publicação do backend | Docker, Coolify, VPS Oracle Always Free e DuckDNS |
+| Publicação do backend | Docker, GitHub Actions, GitHub Container Registry e Azure Container Apps |
 | Geração do APK | EAS Build (Expo) |
 
 ## 4. Arquitetura
@@ -431,18 +431,22 @@ No Windows, os atalhos em `scripts/` instalam as dependências e iniciam o Expo.
 
 ## 15. Publicação
 
-### Backend no Coolify
+### Backend no Azure
 
 O backend é publicado com o `backend/Dockerfile`: uma imagem Node 24, com API e worker no mesmo
 contêiner, verificação de saúde em `/health` e encerramento tranquilo da fila ao parar.
 
 | Peça | Papel |
 | --- | --- |
-| Oracle Always Free | Servidor (VPS ARM, 2 OCPUs e 6 GB) ligado o tempo todo, de graça |
-| Coolify | Painel que baixa o código do GitHub, gera a imagem e publica com HTTPS |
-| DuckDNS | Endereço gratuito e fixo; trocar de servidor não exige gerar o APK de novo |
+| GitHub Actions | A cada push na `master` em `backend/`, roda typecheck e testes e monta a imagem |
+| GitHub Container Registry | Guarda a imagem, de graça para repositório público |
+| Azure Container Apps | Roda o backend com HTTPS, escala a zero e no máximo 1 réplica (0,25 vCPU e 0,5 GB) |
+| Azure OpenAI | Transcrição (`agrobot-voz`, Canada Central) e interpretação (`agrobot-ia`, North Central US) |
 
-Passo a passo em [13-publicar-backend-no-coolify.md](13-publicar-backend-no-coolify.md).
+Endereço: `https://agrobot-api.salmongrass-51b1b27e.northcentralus.azurecontainerapps.io`. Travas de
+custo: escala a zero, limite de chamadas de IA por usuário, limite de tokens nos modelos, limite
+diário de logs e orçamento com alerta. Passo a passo em
+[13-publicar-backend-no-azure.md](13-publicar-backend-no-azure.md).
 
 ### APK Android
 
@@ -463,8 +467,8 @@ O perfil `production` gera o pacote para a Google Play. Passo a passo em
 - Diário de atividades.
 - Assistente de perguntas por texto e por voz, com encaminhamento ao técnico.
 - Segurança por linha, áudios privados e validação de entradas.
-- 55 testes automatizados e avaliação automática da IA.
-- Dockerfile e guia de publicação no Coolify; geração de APK pelo EAS.
+- 61 testes automatizados e avaliação automática da IA.
+- Backend publicado no Azure Container Apps, com escala a zero e travas de custo; IA no Azure OpenAI; geração de APK pelo EAS.
 
 ### Planejado
 
@@ -499,8 +503,7 @@ métricas de uso (PostHog).
 | --- | --- |
 | Supabase | Plano gratuito atende o MVP (projetos parados por cerca de uma semana são pausados) |
 | Azure OpenAI | Pago por uso (na fase acadêmica, sai dos créditos do Azure for Students); estimativa de R$ 0,90 a R$ 4,50 por produtor ativo/mês (transcrição + interpretação) |
-| Servidor do backend | Gratuito na Oracle Always Free |
-| Endereço (DuckDNS) | Gratuito |
+| Servidor do backend | Azure Container Apps com escala a zero: com pouco uso, deve caber na cota gratuita mensal; orçamento com alerta em US$ 10 por mês |
 | SMS de login | Opcional; o login por e-mail é gratuito |
 | Lojas | Google Play: taxa única; Apple: taxa anual |
 
@@ -566,5 +569,5 @@ a menos para hospedar, uma só linguagem no projeto e mais controle sobre segura
 | [10-proposta-arquitetura-sem-n8n.md](10-proposta-arquitetura-sem-n8n.md) | Arquitetura do backend próprio |
 | [11-como-rodar-localmente.md](11-como-rodar-localmente.md) | Rodar no computador |
 | [12-gerar-apk.md](12-gerar-apk.md) | Gerar o APK |
-| [13-publicar-backend-no-coolify.md](13-publicar-backend-no-coolify.md) | Publicar o backend |
+| [13-publicar-backend-no-azure.md](13-publicar-backend-no-azure.md) | Publicar o backend no Azure |
 | [backend/eval/README.md](../backend/eval/README.md) | Avaliação da IA |
