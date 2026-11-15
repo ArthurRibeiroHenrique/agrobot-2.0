@@ -11,6 +11,8 @@ fica salvo de forma estruturada. Todo o sistema é construído em código (TypeS
 - api: especificação da API
 - scripts: atalhos para instalar e iniciar
 
+Visão completa do projeto, em um só documento: [docs/14-documentacao-completa-do-projeto.md](docs/14-documentacao-completa-do-projeto.md).
+
 A arquitetura completa está em [docs/10-proposta-arquitetura-sem-n8n.md](docs/10-proposta-arquitetura-sem-n8n.md).
 
 ## Como rodar
@@ -40,7 +42,7 @@ Para o login funcionar, o Supabase precisa enviar o código: por e-mail, o model
 
 Avaliação da IA: `npm run eval` na pasta backend (ver `backend/eval/README.md`).
 
-Publicar o backend no Railway: [docs/13-publicar-backend-no-railway.md](docs/13-publicar-backend-no-railway.md).
+Publicar o backend no Coolify: [docs/13-publicar-backend-no-coolify.md](docs/13-publicar-backend-no-coolify.md).
 
 Gerar o APK para instalar no Android: [docs/12-gerar-apk.md](docs/12-gerar-apk.md).
 
