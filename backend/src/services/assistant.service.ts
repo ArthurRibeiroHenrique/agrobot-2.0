@@ -1,8 +1,7 @@
 import { zodResponseFormat } from 'openai/helpers/zod';
 
-import { openai } from '../lib/openai';
+import { aiModels, openai } from '../lib/openai';
 import { supabaseAdmin } from '../lib/supabase';
-import { env } from '../config/env';
 import {
   AssistantAnswer,
   AssistantReason,
@@ -164,7 +163,7 @@ export async function answerQuestion(
   context: AssistantContext
 ): Promise<AssistantReply> {
   const completion = await openai.beta.chat.completions.parse({
-    model: env.OPENAI_LLM_MODEL,
+    model: aiModels.llm,
     reasoning_effort: 'low',
     response_format: zodResponseFormat(assistantAnswerSchema, 'resposta_assistente'),
     messages: [

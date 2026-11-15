@@ -4,7 +4,8 @@ Mede se a IA transforma a fala do produtor nos dados certos (hipótese 2).
 
 ## Como rodar
 
-Na pasta `backend`, com `OPENAI_API_KEY` preenchida no `.env`:
+Na pasta `backend`, com as chaves da IA preenchidas no `.env` (Azure OpenAI ou OpenAI, conforme o
+`AI_PROVIDER`):
 
 ```
 npm run eval

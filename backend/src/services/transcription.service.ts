@@ -1,8 +1,7 @@
 import path from 'path';
 import { toFile } from 'openai';
 
-import { openai } from '../lib/openai';
-import { env } from '../config/env';
+import { aiModels, transcriptionClient } from '../lib/openai';
 import { downloadAudio } from './storage.service';
 
 // Palavras que o modelo de voz costuma errar sem contexto (ex.: "ureia" virando "durei").
@@ -38,9 +37,9 @@ export async function transcribeBuffer(
   filename: string,
   fieldNames: string[] = []
 ): Promise<string> {
-  const transcription = await openai.audio.transcriptions.create({
+  const transcription = await transcriptionClient.audio.transcriptions.create({
     file: await toFile(buffer, filename),
-    model: env.OPENAI_TRANSCRIPTION_MODEL,
+    model: aiModels.transcription,
     language: 'pt',
     prompt: buildTranscriptionPrompt(fieldNames)
   });
