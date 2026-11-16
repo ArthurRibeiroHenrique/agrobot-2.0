@@ -88,3 +88,15 @@ export type AssistantMessage = {
   voice_job_id: string | null;
   created_at: string;
 };
+
+export type SharePerson = {
+  user_id: string;
+  email: string | null;
+  created_at: string;
+};
+
+// shared_with: quem vê o meu diário. shared_by: de quem eu vejo o diário.
+export type Shares = {
+  shared_with: SharePerson[];
+  shared_by: SharePerson[];
+};

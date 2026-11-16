@@ -22,6 +22,14 @@ export default function ProfileScreen() {
 
       <View style={styles.espaco} />
 
+      <BotaoGrande
+        texto="Compartilhar meu diário"
+        variante="secundario"
+        onPress={() => router.push('/share')}
+      />
+
+      <View style={styles.espaco} />
+
       <BotaoGrande texto="Sair" variante="secundario" onPress={sair} />
     </Tela>
   );

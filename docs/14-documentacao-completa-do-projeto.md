@@ -293,6 +293,9 @@ Base: `http://localhost:3333` (local) ou o endereço publicado. Todas as rotas `
 | POST | `/v1/voice-jobs/:id/confirm` | Confirma os registros (`{ "activities": [ … ] }`) |
 | POST | `/v1/voice-jobs/:id/ask` | Trata a gravação como pergunta (quando a intenção era incerta) |
 | GET | `/v1/activities` | Diário do produtor (inclui o de quem compartilhou com ele) |
+| GET / POST | `/v1/shares` | Lista os compartilhamentos ou compartilha o diário (`{ "email": "…" }`) |
+| DELETE | `/v1/shares/:memberId` | Para de compartilhar o diário com essa pessoa |
+| DELETE | `/v1/shares/received/:ownerId` | Deixa de ver o diário compartilhado por essa pessoa |
 | GET / PATCH / DELETE | `/v1/activities/:id` | Detalhes, correção ou exclusão de um registro do diário |
 | GET / POST | `/v1/farms` | Lista ou cadastra propriedades |
 | GET / POST | `/v1/fields` | Lista (filtro opcional `farm_id`) ou cadastra talhões |
@@ -314,6 +317,7 @@ executadas **em ordem**:
 | `20261024…_assistente_intencao` | Tabela `assistant_messages`, intenção e resposta na tarefa de voz |
 | `20261027…_varios_talhoes` | Vários rascunhos por gravação (`drafts`) e posição de cada registro (`draft_index`) |
 | `20261116…_compartilhamento` | Tabela `diary_shares` (diário compartilhado) e RLS de leitura para quem recebeu o acesso |
+| `20261116…_compartilhar_por_email` | Funções `user_id_by_email` e `user_emails`, só para o backend |
 
 | Tabela | Conteúdo |
 | --- | --- |
@@ -331,17 +335,13 @@ pg-boss cria as próprias tabelas, no schema `pgboss`, quando inicia.
 ### Diário compartilhado
 
 Uma linha em `diary_shares` dá a `member_id` acesso aos dados de `owner_id`: registros do diário,
-propriedades e talhões (inclusive para a IA reconhecer os talhões pelo nome). Para duas pessoas verem
-tudo uma da outra, gravam-se as duas direções. Ainda não há tela para isso; o compartilhamento é feito
-no SQL Editor, buscando os ids em `auth.users` pelo e-mail:
+propriedades e talhões (inclusive para a IA reconhecer os talhões pelo nome). Compartilhar é de mão
+única: para duas pessoas verem tudo uma da outra, as duas compartilham.
 
-```sql
-insert into diary_shares (owner_id, member_id)
-select a.id, b.id from auth.users a, auth.users b
-where (a.email, b.email) in (('pessoa1@exemplo.com', 'pessoa2@exemplo.com'),
-                             ('pessoa2@exemplo.com', 'pessoa1@exemplo.com'))
-on conflict do nothing;
-```
+No app: **Perfil > Compartilhar meu diário**. Basta o e-mail da outra pessoa, que precisa já ter entrado
+no AgroBot uma vez. A mesma tela lista quem vê o meu diário (botão **Parar**) e os diários que eu vejo
+(botão **Sair**). O backend acha a conta pelo e-mail com as funções `user_id_by_email` e `user_emails`,
+que só a service role pode chamar.
 
 Quem edita o registro de outra pessoa não vira dono dele: `user_id` continua sendo quem gravou.
 

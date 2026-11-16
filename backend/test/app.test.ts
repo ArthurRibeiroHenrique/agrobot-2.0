@@ -17,6 +17,10 @@ const mocks = vi.hoisted(() => ({
   getActivity: vi.fn(),
   updateActivity: vi.fn(),
   deleteActivity: vi.fn(),
+  listShares: vi.fn(),
+  shareDiary: vi.fn(),
+  stopSharing: vi.fn(),
+  leaveSharedDiary: vi.fn(),
   askAssistant: vi.fn(),
   listAssistantMessages: vi.fn(),
   answerVoiceJobAsQuestion: vi.fn()
@@ -44,6 +48,14 @@ vi.mock('../src/services/voice-job.service', () => ({
   getActivity: mocks.getActivity,
   updateActivity: mocks.updateActivity,
   deleteActivity: mocks.deleteActivity
+}));
+
+vi.mock('../src/services/sharing.service', () => ({
+  accessibleUserIds: vi.fn(async (userId: string) => [userId]),
+  listShares: mocks.listShares,
+  shareDiary: mocks.shareDiary,
+  stopSharing: mocks.stopSharing,
+  leaveSharedDiary: mocks.leaveSharedDiary
 }));
 
 vi.mock('../src/services/assistant.service', () => ({
@@ -358,6 +370,52 @@ describe('POST /v1/assistant/messages', () => {
       .send({ question: 'Oi' });
 
     expect(res.status).toBe(401);
+  });
+});
+
+describe('compartilhamento do diário', () => {
+  const OTHER_ID = '44444444-4444-4444-8444-444444444444';
+
+  it('lista com quem o usuário compartilha e quem compartilha com ele', async () => {
+    mocks.listShares.mockResolvedValue({ shared_with: [], shared_by: [] });
+
+    const res = await request(app).get('/v1/shares').set(auth);
+
+    expect(res.status).toBe(200);
+    expect(mocks.listShares).toHaveBeenCalledWith(USER_ID);
+  });
+
+  it('compartilha pelo e-mail informado', async () => {
+    mocks.shareDiary.mockResolvedValue({ user_id: OTHER_ID, email: 'a@b.com' });
+
+    const res = await request(app)
+      .post('/v1/shares')
+      .set(auth)
+      .send({ email: '  a@b.com ' });
+
+    expect(res.status).toBe(201);
+    expect(mocks.shareDiary).toHaveBeenCalledWith(USER_ID, 'a@b.com');
+  });
+
+  it('recusa e-mail inválido', async () => {
+    const res = await request(app).post('/v1/shares').set(auth).send({ email: 'abc' });
+
+    expect(res.status).toBe(400);
+    expect(mocks.shareDiary).not.toHaveBeenCalled();
+  });
+
+  it('para de compartilhar com uma pessoa', async () => {
+    const res = await request(app).delete(`/v1/shares/${OTHER_ID}`).set(auth);
+
+    expect(res.status).toBe(204);
+    expect(mocks.stopSharing).toHaveBeenCalledWith(USER_ID, OTHER_ID);
+  });
+
+  it('deixa de ver o diário compartilhado por outra pessoa', async () => {
+    const res = await request(app).delete(`/v1/shares/received/${OTHER_ID}`).set(auth);
+
+    expect(res.status).toBe(204);
+    expect(mocks.leaveSharedDiary).toHaveBeenCalledWith(USER_ID, OTHER_ID);
   });
 });
 
