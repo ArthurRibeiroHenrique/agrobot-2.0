@@ -24,15 +24,14 @@ export function buildSystemPrompt(context: ExtractionContext): string {
           .join('\n')
       : '(nenhum talhão cadastrado)';
 
+  // Parte fixa primeiro e dados do produtor no fim: o Azure OpenAI guarda em cache o início que se
+  // repete entre chamadas e cobra bem menos por ele. Nada que muda por produtor ou por dia antes
+  // do fim das regras.
   return [
     'Você é um assistente de registro agrícola. Converta a fala de um produtor rural brasileiro em dados estruturados.',
     'A fala pode relatar uma atividade feita, fazer uma pergunta, ou as duas coisas.',
     'A fala vem de uma transcrição automática e pode ter palavras erradas.',
-    '',
-    `Data de hoje: ${context.today}.`,
-    '',
-    'Talhões cadastrados deste produtor:',
-    fields,
+    'A data de hoje e os talhões cadastrados do produtor estão no fim destas instruções.',
     '',
     'Regras:',
     `- intent: um de ${INTENTS.join(', ')}. "registro" quando o produtor conta algo que fez ou gastou; "pergunta" quando só pergunta ou pede orientação; "ambos" quando conta uma atividade e também pergunta algo; "incerto" quando não dá para saber se ele quer anotar ou perguntar.`,
@@ -52,7 +51,12 @@ export function buildSystemPrompt(context: ExtractionContext): string {
     '- occurred_at: data da atividade em AAAA-MM-DD, resolvendo "hoje", "ontem", "anteontem" e dias da semana a partir da data de hoje. Se a data não foi dita, null.',
     '- cost: valor total em dinheiro, se dito. currency: "BRL" quando houver cost.',
     '- Os campos activity_type, product, quantity, unit, field_name, occurred_at, cost e currency ficam dentro de cada item de activities.',
-    '- confidence: de 0 a 1, o quanto a fala foi clara e completa.'
+    '- confidence: de 0 a 1, o quanto a fala foi clara e completa.',
+    '',
+    `Data de hoje: ${context.today}.`,
+    '',
+    'Talhões cadastrados deste produtor:',
+    fields
   ].join('\n');
 }
 

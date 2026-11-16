@@ -263,6 +263,7 @@ O produtor pode perguntar por texto (aba **Perguntar**) ou por voz (na mesma gra
 | `RUN_WORKER` | `true`: API e worker juntos; `false`: worker à parte | `true` |
 | `ALLOWED_ORIGINS` | Origens permitidas no CORS, separadas por vírgula | `http://localhost:3000` |
 | `AI_RATE_LIMIT_PER_HOUR` | Máximo de chamadas de IA (áudios e perguntas) por usuário por hora; acima disso, erro 429 | `60` |
+| `KEEP_AUDIO_AFTER_PROCESSING` | `false`: apaga o áudio depois de processado; `true`: guarda (ex.: para casos reais do eval) | `false` |
 
 A API não inicia se uma variável obrigatória faltar: o erro diz qual é.
 
@@ -371,7 +372,7 @@ Detalhes em [03-documentacao-do-app.md](03-documentacao-do-app.md).
 
 ### Testes automatizados
 
-`npm test` na pasta `backend` roda 61 testes (Vitest + Supertest), sem chamar a IA nem o Supabase
+`npm test` na pasta `backend` roda 65 testes (Vitest + Supertest), sem chamar a IA nem o Supabase
 de verdade:
 
 | Arquivo | O que cobre |
@@ -467,7 +468,7 @@ O perfil `production` gera o pacote para a Google Play. Passo a passo em
 - Diário de atividades.
 - Assistente de perguntas por texto e por voz, com encaminhamento ao técnico.
 - Segurança por linha, áudios privados e validação de entradas.
-- 61 testes automatizados e avaliação automática da IA.
+- 65 testes automatizados e avaliação automática da IA.
 - Backend publicado no Azure Container Apps, com escala a zero e travas de custo; IA no Azure OpenAI; geração de APK pelo EAS.
 
 ### Planejado

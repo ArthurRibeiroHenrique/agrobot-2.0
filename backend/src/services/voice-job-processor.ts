@@ -5,8 +5,20 @@ import { extractActivityFromTranscript } from './extraction.service';
 import { buildDrafts, emptyDraft, todayInTimezone } from './draft.service';
 import { listFields } from './farm.service';
 import { findVoiceJobById, updateVoiceJob } from './voice-job.service';
+import { removeAudio } from './storage.service';
+import { env } from '../config/env';
 
 const PROCESSABLE_STATUSES = ['queued', 'transcribing', 'extracting'];
+
+// Depois da transcrição salva, o áudio não é mais usado. Apagar poupa o armazenamento e evita
+// guardar a voz do produtor sem necessidade (LGPD). Falha ao apagar não derruba o processamento.
+async function discardAudio(audioPath: string): Promise<void> {
+  if (env.KEEP_AUDIO_AFTER_PROCESSING) return;
+
+  await removeAudio(audioPath).catch((error) => {
+    console.error('Não foi possível apagar o áudio processado:', error);
+  });
+}
 
 export async function processVoiceJob(
   jobId: string,
@@ -95,6 +107,8 @@ export async function processVoiceJob(
       answer,
       error: null
     });
+
+    await discardAudio(job.audio_path);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : String(error);
@@ -105,6 +119,11 @@ export async function processVoiceJob(
     }).catch(() => {
       console.error('Erro ao registrar falha do voice job');
     });
+
+    // Sem mais tentativas, o áudio não será processado de novo.
+    if (options.isLastAttempt && job.audio_path) {
+      await discardAudio(job.audio_path);
+    }
 
     // Relança para a fila agendar a próxima tentativa.
     throw error;

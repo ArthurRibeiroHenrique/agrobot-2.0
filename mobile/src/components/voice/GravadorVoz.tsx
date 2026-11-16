@@ -5,9 +5,14 @@ import { cores } from '../../lib/constants';
 type Props = {
   gravando: boolean;
   duracaoMs: number;
+  // Com limite, mostra quanto falta nos últimos segundos.
+  duracaoMaximaMs?: number;
   desabilitado?: boolean;
   onPress: () => void;
 };
+
+// A partir daqui o contador avisa que a gravação vai terminar.
+const AVISO_FINAL_MS = 20 * 1000;
 
 function formatarDuracao(ms: number): string {
   const segundos = Math.floor(ms / 1000);
@@ -17,7 +22,16 @@ function formatarDuracao(ms: number): string {
 }
 
 // Um toque começa a gravar, outro toque termina.
-export function GravadorVoz({ gravando, duracaoMs, desabilitado = false, onPress }: Props) {
+export function GravadorVoz({
+  gravando,
+  duracaoMs,
+  duracaoMaximaMs,
+  desabilitado = false,
+  onPress
+}: Props) {
+  const restanteMs = duracaoMaximaMs ? Math.max(0, duracaoMaximaMs - duracaoMs) : null;
+  const terminando = gravando && restanteMs !== null && restanteMs <= AVISO_FINAL_MS;
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -36,7 +50,13 @@ export function GravadorVoz({ gravando, duracaoMs, desabilitado = false, onPress
       <Text style={styles.legenda}>
         {gravando ? 'Toque para terminar' : 'Toque para falar'}
       </Text>
-      <Text style={styles.duracao}>{gravando ? formatarDuracao(duracaoMs) : ' '}</Text>
+      <Text style={[styles.duracao, terminando && styles.duracaoTerminando]}>
+        {!gravando
+          ? ' '
+          : terminando
+            ? `Termina em ${Math.ceil((restanteMs ?? 0) / 1000)} s`
+            : formatarDuracao(duracaoMs)}
+      </Text>
     </View>
   );
 }
@@ -82,5 +102,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: cores.textoSuave,
     marginTop: 6
+  },
+  duracaoTerminando: {
+    color: cores.alerta,
+    fontWeight: '700'
   }
 });

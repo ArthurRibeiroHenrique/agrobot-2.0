@@ -46,6 +46,9 @@ publicar tudo em `brazilsouth`.
 | Logs | Até 0,1 GB por dia em cada espaço do Log Analytics | Log Analytics > Uso e custos estimados > Limite diário |
 | Registro de imagens | GitHub Container Registry, gratuito para repositório público | `.github/workflows/backend-image.yml` |
 | Orçamento | `agrobot-mensal`: US$ 10 por mês, com e-mail em 50%, 80% e 100% | Gerenciamento de Custos > Orçamentos |
+| Cache de prompt | Regras fixas no início dos prompts e dados do produtor no fim: cerca de 1.024 dos ~1.270 tokens de entrada vêm do cache, cobrados a um décimo | `extraction.service.ts` e `assistant.service.ts` |
+| Áudio apagado | O áudio sai do Supabase Storage quando o processamento termina (ou na última tentativa que falhou) | Variável `KEEP_AUDIO_AFTER_PROCESSING` |
+| Gravação de voz | App grava em mono, 16 kHz e 32 kbps (cerca de 4 vezes menor) e para sozinho em 2 minutos | `mobile/src/hooks/useVoiceRecording.ts` e `new-voice.tsx` |
 
 A conta Azure for Students não cobra no cartão: quando os créditos acabam, os serviços são suspensos.
 

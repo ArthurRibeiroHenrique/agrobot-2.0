@@ -11,7 +11,8 @@ const mocks = vi.hoisted(() => ({
   transcribeAudio: vi.fn(),
   extractActivityFromTranscript: vi.fn(),
   listFields: vi.fn(),
-  askFromVoice: vi.fn()
+  askFromVoice: vi.fn(),
+  removeAudio: vi.fn()
 }));
 
 vi.mock('../src/services/voice-job.service', () => ({
@@ -33,6 +34,10 @@ vi.mock('../src/services/farm.service', () => ({
 
 vi.mock('../src/services/assistant.service', () => ({
   askFromVoice: mocks.askFromVoice
+}));
+
+vi.mock('../src/services/storage.service', () => ({
+  removeAudio: mocks.removeAudio
 }));
 
 import { processVoiceJob } from '../src/services/voice-job-processor';
@@ -85,6 +90,7 @@ beforeEach(() => {
   mocks.transcribeAudio.mockResolvedValue('fala do produtor');
   mocks.listFields.mockResolvedValue([{ id: 'f2', name: 'Talhão 2', crop: 'milho' }]);
   mocks.askFromVoice.mockResolvedValue(ANSWER);
+  mocks.removeAudio.mockResolvedValue(undefined);
 });
 
 describe('processVoiceJob por intenção', () => {
@@ -210,5 +216,40 @@ describe('processVoiceJob por intenção', () => {
 
     await expect(processVoiceJob(JOB_ID, { isLastAttempt: false })).rejects.toThrow('timeout');
     expect(finalUpdate()).toMatchObject({ status: 'queued', error: 'timeout' });
+  });
+});
+
+describe('processVoiceJob e o áudio', () => {
+  it('apaga o áudio depois de processar', async () => {
+    mocks.extractActivityFromTranscript.mockResolvedValue(extraction());
+
+    await processVoiceJob(JOB_ID, { isLastAttempt: false });
+
+    expect(mocks.removeAudio).toHaveBeenCalledWith(`${USER_ID}/a.m4a`);
+  });
+
+  it('guarda o áudio quando ainda vai haver nova tentativa', async () => {
+    mocks.transcribeAudio.mockRejectedValue(new Error('timeout'));
+
+    await expect(processVoiceJob(JOB_ID, { isLastAttempt: false })).rejects.toThrow('timeout');
+
+    expect(mocks.removeAudio).not.toHaveBeenCalled();
+  });
+
+  it('apaga o áudio na última tentativa que falhou', async () => {
+    mocks.transcribeAudio.mockRejectedValue(new Error('timeout'));
+
+    await expect(processVoiceJob(JOB_ID, { isLastAttempt: true })).rejects.toThrow('timeout');
+
+    expect(mocks.removeAudio).toHaveBeenCalledWith(`${USER_ID}/a.m4a`);
+  });
+
+  it('falha ao apagar o áudio não muda o resultado', async () => {
+    mocks.extractActivityFromTranscript.mockResolvedValue(extraction());
+    mocks.removeAudio.mockRejectedValue(new Error('storage fora do ar'));
+
+    await processVoiceJob(JOB_ID, { isLastAttempt: false });
+
+    expect(finalUpdate()).toMatchObject({ status: 'needs_confirmation' });
   });
 });
