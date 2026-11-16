@@ -118,5 +118,11 @@ Registro inexistente, ou de alguém que não compartilhou o diário com o usuár
 ## Diário compartilhado
 
 Quem recebeu o acesso na tabela `diary_shares` vê e edita, pelas mesmas rotas, os registros, as
-propriedades e os talhões de quem compartilhou. Ver a seção "Diário compartilhado" em
-[14-documentacao-completa-do-projeto.md](14-documentacao-completa-do-projeto.md).
+propriedades e os talhões de quem compartilhou. Compartilhar é de mão única.
+
+- `GET /shares` devolve `{ "shared_with": [...], "shared_by": [...] }`: quem vê o meu diário e de
+  quem eu vejo o diário. Cada item tem `user_id`, `email` e `created_at`.
+- `POST /shares` com `{ "email": "..." }` compartilha o meu diário com essa pessoa (201). Responde 404
+  se não há conta com o e-mail, 400 se é o próprio e-mail e 409 se já está compartilhado.
+- `DELETE /shares/:memberId` para de compartilhar com essa pessoa (204).
+- `DELETE /shares/received/:ownerId` deixa de ver o diário dessa pessoa (204).
