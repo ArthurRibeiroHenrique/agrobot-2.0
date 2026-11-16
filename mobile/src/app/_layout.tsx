@@ -52,7 +52,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="activity/new-voice" options={{ title: 'Falar com o AgroBot' }} />
           <Stack.Screen name="activity/confirm-draft" options={{ title: 'Confira' }} />
-          <Stack.Screen name="activity/edit" options={{ title: 'Editar atividade' }} />
+          <Stack.Screen name="activity/edit" options={{ title: 'Detalhes do registro' }} />
           <Stack.Screen name="farm/setup" options={{ title: 'Minha propriedade' }} />
           <Stack.Screen name="farm/fields" options={{ title: 'Talhões' }} />
           <Stack.Screen name="coop/dashboard" options={{ title: 'Cooperativa' }} />
