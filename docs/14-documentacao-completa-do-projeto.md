@@ -292,7 +292,8 @@ Base: `http://localhost:3333` (local) ou o endereço publicado. Todas as rotas `
 | GET | `/v1/voice-jobs/:id` | Status, transcrição, rascunhos e resposta da tarefa |
 | POST | `/v1/voice-jobs/:id/confirm` | Confirma os registros (`{ "activities": [ … ] }`) |
 | POST | `/v1/voice-jobs/:id/ask` | Trata a gravação como pergunta (quando a intenção era incerta) |
-| GET | `/v1/activities` | Diário do produtor |
+| GET | `/v1/activities` | Diário do produtor (inclui o de quem compartilhou com ele) |
+| GET / PATCH / DELETE | `/v1/activities/:id` | Detalhes, correção ou exclusão de um registro do diário |
 | GET / POST | `/v1/farms` | Lista ou cadastra propriedades |
 | GET / POST | `/v1/fields` | Lista (filtro opcional `farm_id`) ou cadastra talhões |
 | GET / POST | `/v1/assistant/messages` | Histórico de perguntas ou nova pergunta (`{ "question": "…" }`) |
@@ -312,6 +313,7 @@ executadas **em ordem**:
 | `20261008…_propriedades_talhoes_datas` | Tabelas `farms` e `fields`, ligação da atividade ao talhão |
 | `20261024…_assistente_intencao` | Tabela `assistant_messages`, intenção e resposta na tarefa de voz |
 | `20261027…_varios_talhoes` | Vários rascunhos por gravação (`drafts`) e posição de cada registro (`draft_index`) |
+| `20261116…_compartilhamento` | Tabela `diary_shares` (diário compartilhado) e RLS de leitura para quem recebeu o acesso |
 
 | Tabela | Conteúdo |
 | --- | --- |
@@ -320,9 +322,28 @@ executadas **em ordem**:
 | `farms` | Propriedades: nome, cidade, estado |
 | `fields` | Talhões: propriedade, nome, cultura, área em hectares |
 | `assistant_messages` | Perguntas e respostas, com indicação de encaminhamento ao técnico |
+| `diary_shares` | Compartilhamento: `member_id` vê e edita os registros, propriedades e talhões de `owner_id` |
 
-Todas as tabelas têm **segurança por linha** (RLS): cada usuário só lê os próprios registros. A fila
+Todas as tabelas têm **segurança por linha** (RLS): cada usuário só lê os próprios registros e os de
+quem compartilhou o diário com ele. A fila
 pg-boss cria as próprias tabelas, no schema `pgboss`, quando inicia.
+
+### Diário compartilhado
+
+Uma linha em `diary_shares` dá a `member_id` acesso aos dados de `owner_id`: registros do diário,
+propriedades e talhões (inclusive para a IA reconhecer os talhões pelo nome). Para duas pessoas verem
+tudo uma da outra, gravam-se as duas direções. Ainda não há tela para isso; o compartilhamento é feito
+no SQL Editor, buscando os ids em `auth.users` pelo e-mail:
+
+```sql
+insert into diary_shares (owner_id, member_id)
+select a.id, b.id from auth.users a, auth.users b
+where (a.email, b.email) in (('pessoa1@exemplo.com', 'pessoa2@exemplo.com'),
+                             ('pessoa2@exemplo.com', 'pessoa1@exemplo.com'))
+on conflict do nothing;
+```
+
+Quem edita o registro de outra pessoa não vira dono dele: `user_id` continua sendo quem gravou.
 
 ## 11. Aplicativo
 
