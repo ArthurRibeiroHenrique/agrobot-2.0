@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { BotaoGrande } from '../../components/ui/BotaoGrande';
@@ -17,6 +17,10 @@ import {
 // Gravações mais curtas que isso quase sempre são toque acidental.
 const DURACAO_MINIMA_MS = 1000;
 
+// A transcrição é cobrada por minuto de áudio: uma gravação esquecida ligada vira custo.
+// Dois minutos sobram para relatar várias atividades ou fazer uma pergunta.
+const DURACAO_MAXIMA_MS = 2 * 60 * 1000;
+
 type Pendente = {
   uri: string;
   clientId: string;
@@ -30,6 +34,21 @@ export default function NewVoiceScreen() {
   // Guarda a gravação que falhou no envio, para tentar de novo sem regravar.
   const pendente = useRef<Pendente | null>(null);
   const [temPendente, setTemPendente] = useState(false);
+  const parandoPorLimite = useRef(false);
+
+  // No limite de duração, para e envia sozinho, como se o produtor tivesse tocado em parar.
+  useEffect(() => {
+    if (!gravando) {
+      parandoPorLimite.current = false;
+      return;
+    }
+
+    if (duracaoMs >= DURACAO_MAXIMA_MS && !parandoPorLimite.current) {
+      parandoPorLimite.current = true;
+      void alternarGravacao();
+    }
+    // alternarGravacao muda a cada render; só a duração e o estado da gravação importam aqui.
+  }, [gravando, duracaoMs]);
 
   async function enviar(gravacao: Pendente) {
     setErro(null);
@@ -115,6 +134,7 @@ export default function NewVoiceScreen() {
             <GravadorVoz
               gravando={gravando}
               duracaoMs={duracaoMs}
+              duracaoMaximaMs={DURACAO_MAXIMA_MS}
               onPress={alternarGravacao}
             />
           </>
