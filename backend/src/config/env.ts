@@ -37,7 +37,12 @@ const envSchema = z
       .transform((value) => value === 'true'),
     ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
     // Máximo de chamadas de IA (áudios e perguntas) por usuário a cada hora.
-    AI_RATE_LIMIT_PER_HOUR: z.coerce.number().int().positive().default(60)
+    AI_RATE_LIMIT_PER_HOUR: z.coerce.number().int().positive().default(60),
+    // false: apaga o áudio depois de processado. true: guarda (ex.: para montar casos reais do eval).
+    KEEP_AUDIO_AFTER_PROCESSING: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true')
   })
   .superRefine((value, ctx) => {
     const required: Array<[keyof typeof value, string]> =
