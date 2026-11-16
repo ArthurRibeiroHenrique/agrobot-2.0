@@ -163,6 +163,7 @@ az containerapp revision restart -n agrobot-api -g Agrobot --revision $(az conta
 | `password authentication failed` nos logs | Senha errada na `DATABASE_URL`; redefina em Supabase > Database |
 | Primeira resposta demora alguns segundos | Normal: o backend estava desligado pela escala a zero |
 | Erro 429 no app | O usuário passou do limite de chamadas de IA por hora |
+| Erro 500 com `column ... does not exist` nos logs | Migração pendente no Supabase: aplique os arquivos de `backend/supabase/migrations` que faltam, em ordem |
 
 ## Histórico da hospedagem
 
