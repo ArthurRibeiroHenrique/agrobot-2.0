@@ -1,10 +1,12 @@
 import { supabaseAdmin } from '../lib/supabase';
 import {
   activityDraftSchema,
-  ActivityDraft
+  ActivityDraft,
+  ActivityUpdate
 } from '../schemas/activity.schema';
 import { HttpError } from '../utils/http-error';
-import { userOwnsField } from './farm.service';
+import { userCanUseField } from './farm.service';
+import { accessibleUserIds } from './sharing.service';
 
 const UNIQUE_VIOLATION = '23505';
 
@@ -151,7 +153,7 @@ export async function confirmVoiceJob(
   );
 
   for (const fieldId of fieldIds) {
-    if (!(await userOwnsField(userId, fieldId))) {
+    if (!(await userCanUseField(userId, fieldId))) {
       throw new HttpError(400, 'Talhão não encontrado');
     }
   }
@@ -203,11 +205,14 @@ export async function confirmVoiceJob(
   return saved;
 }
 
+// Registros do usuário e de quem compartilhou o diário com ele.
 export async function listActivities(userId: string) {
+  const owners = await accessibleUserIds(userId);
+
   const { data, error } = await supabaseAdmin
     .from('activities')
     .select('*')
-    .eq('user_id', userId)
+    .in('user_id', owners)
     .order('occurred_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(100);
@@ -215,4 +220,70 @@ export async function listActivities(userId: string) {
   if (error) throw error;
 
   return data;
+}
+
+export async function getActivity(id: string, userId: string) {
+  const owners = await accessibleUserIds(userId);
+
+  const { data, error } = await supabaseAdmin
+    .from('activities')
+    .select('*')
+    .eq('id', id)
+    .in('user_id', owners)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return data;
+}
+
+// Correção feita na tela de detalhes. O dono do registro (user_id) não muda,
+// mesmo quando quem edita é a pessoa com quem o diário foi compartilhado.
+export async function updateActivity(
+  id: string,
+  userId: string,
+  input: ActivityUpdate
+) {
+  const current = await getActivity(id, userId);
+
+  if (!current) {
+    throw new HttpError(404, 'Registro não encontrado');
+  }
+
+  if (input.field_id && !(await userCanUseField(userId, input.field_id))) {
+    throw new HttpError(400, 'Talhão não encontrado');
+  }
+
+  const patch: Record<string, unknown> = {
+    ...input,
+    updated_at: new Date().toISOString()
+  };
+
+  // Custo informado sem moeda: o diário é em reais.
+  if ('cost' in input) {
+    patch.currency = input.cost !== null ? current.currency || 'BRL' : null;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('activities')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function deleteActivity(id: string, userId: string) {
+  const current = await getActivity(id, userId);
+
+  if (!current) {
+    throw new HttpError(404, 'Registro não encontrado');
+  }
+
+  const { error } = await supabaseAdmin.from('activities').delete().eq('id', id);
+
+  if (error) throw error;
 }

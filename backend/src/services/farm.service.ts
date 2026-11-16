@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '../lib/supabase';
 import { CreateFarmInput, CreateFieldInput } from '../schemas/farm.schema';
 import { HttpError } from '../utils/http-error';
+import { accessibleUserIds } from './sharing.service';
 
 export type FieldRef = {
   id: string;
@@ -8,11 +9,14 @@ export type FieldRef = {
   crop: string | null;
 };
 
+// Inclui as propriedades de quem compartilhou o diário com o usuário.
 export async function listFarms(userId: string) {
+  const owners = await accessibleUserIds(userId);
+
   const { data, error } = await supabaseAdmin
     .from('farms')
     .select('id, name, city, state, created_at')
-    .eq('user_id', userId)
+    .in('user_id', owners)
     .order('created_at', { ascending: true });
 
   if (error) throw error;
@@ -38,10 +42,12 @@ export async function createFarm(userId: string, input: CreateFarmInput) {
 }
 
 export async function listFields(userId: string, farmId?: string) {
+  const owners = await accessibleUserIds(userId);
+
   let query = supabaseAdmin
     .from('fields')
     .select('id, farm_id, name, crop, area_ha, created_at')
-    .eq('user_id', userId)
+    .in('user_id', owners)
     .order('created_at', { ascending: true });
 
   if (farmId) {
@@ -56,11 +62,13 @@ export async function listFields(userId: string, farmId?: string) {
 }
 
 export async function createField(userId: string, input: CreateFieldInput) {
+  const owners = await accessibleUserIds(userId);
+
   const { data: farm, error: farmError } = await supabaseAdmin
     .from('farms')
     .select('id')
     .eq('id', input.farm_id)
-    .eq('user_id', userId)
+    .in('user_id', owners)
     .maybeSingle();
 
   if (farmError) throw farmError;
@@ -86,15 +94,18 @@ export async function createField(userId: string, input: CreateFieldInput) {
   return data;
 }
 
-export async function userOwnsField(
+// O talhão é do usuário ou de quem compartilhou o diário com ele.
+export async function userCanUseField(
   userId: string,
   fieldId: string
 ): Promise<boolean> {
+  const owners = await accessibleUserIds(userId);
+
   const { data, error } = await supabaseAdmin
     .from('fields')
     .select('id')
     .eq('id', fieldId)
-    .eq('user_id', userId)
+    .in('user_id', owners)
     .maybeSingle();
 
   if (error) throw error;
