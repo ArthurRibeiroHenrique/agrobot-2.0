@@ -1,7 +1,7 @@
 # Documentação da API
 
 Estado alvo da API. Hoje o backend implementa `/health`, as três rotas de `voice-jobs`,
-`GET /activities`, `GET/POST /farms` e `GET/POST /fields`, todas (exceto `/health`) com
+`GET /activities`, `GET/PATCH/DELETE /activities/:id`, `GET/POST /farms` e `GET/POST /fields`, todas (exceto `/health`) com
 autenticação. As demais estão planejadas;
 ver [10-proposta-arquitetura-sem-n8n.md](10-proposta-arquitetura-sem-n8n.md).
 
@@ -30,7 +30,7 @@ Por isso a API não tem rotas `/auth`.
 | POST /voice-jobs/:id/confirm | Confirma ou corrige o rascunho |
 | POST /voice-jobs/:id/ask | Trata a gravação como pergunta e responde |
 | GET, POST /activities | Diário agrícola |
-| PATCH /activities/:id | Edição de atividade |
+| GET, PATCH, DELETE /activities/:id | Detalhes, edição e exclusão de atividade |
 | GET /alerts | Alertas do produtor |
 | GET, POST /assistant/messages | Histórico e nova pergunta ao assistente |
 | GET /organizations/:id/metrics | Painel agregado da cooperativa |
@@ -104,3 +104,19 @@ Na confirmação, o aplicativo envia `{ "activities": [ { ... }, { ... } ] }`, u
 revisado (o produtor pode remover rascunhos antes de salvar). A resposta é a lista das atividades
 criadas, todas com o mesmo `voice_job_id`; ou todas são salvas, ou nenhuma. O formato antigo,
 `{ "corrections": { ... } }`, continua aceito e salva um único registro.
+
+## Edição de registros do diário
+
+- `GET /activities/:id` devolve um registro.
+- `PATCH /activities/:id` corrige um registro já salvo. Aceita só `activity_type`, `product`,
+  `quantity`, `unit`, `field_id`, `field_name`, `occurred_at` (AAAA-MM-DD) e `cost`; outros campos
+  são ignorados. Texto vazio vira `null`. Com custo, a moeda fica `BRL`.
+- `DELETE /activities/:id` apaga o registro (resposta 204).
+
+Registro inexistente, ou de alguém que não compartilhou o diário com o usuário, responde 404.
+
+## Diário compartilhado
+
+Quem recebeu o acesso na tabela `diary_shares` vê e edita, pelas mesmas rotas, os registros, as
+propriedades e os talhões de quem compartilhou. Ver a seção "Diário compartilhado" em
+[14-documentacao-completa-do-projeto.md](14-documentacao-completa-do-projeto.md).

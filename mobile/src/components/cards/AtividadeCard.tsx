@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { cores } from '../../lib/constants';
 import {
@@ -10,6 +11,7 @@ import {
 import type { Activity } from '../../types';
 
 export function AtividadeCard({ atividade }: { atividade: Activity }) {
+  const router = useRouter();
   const quantidade =
     atividade.quantity !== null
       ? `${formatarNumero(atividade.quantity)} ${atividade.unit ?? ''}`.trim()
@@ -20,7 +22,14 @@ export function AtividadeCard({ atividade }: { atividade: Activity }) {
     .join('  •  ');
 
   return (
-    <View style={styles.cartao}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint="Abre os detalhes do registro"
+      onPress={() =>
+        router.push({ pathname: '/activity/edit', params: { id: atividade.id } })
+      }
+      style={({ pressed }) => [styles.cartao, pressed && styles.pressionado]}
+    >
       <View style={styles.cabecalho}>
         <Text style={styles.tipo}>{rotuloDoTipo(atividade.activity_type)}</Text>
         <Text style={styles.data}>{formatarData(atividade.occurred_at)}</Text>
@@ -29,7 +38,7 @@ export function AtividadeCard({ atividade }: { atividade: Activity }) {
       {atividade.cost !== null ? (
         <Text style={styles.custo}>{formatarDinheiro(atividade.cost)}</Text>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 
@@ -41,6 +50,9 @@ const styles = StyleSheet.create({
     borderColor: cores.borda,
     padding: 16,
     marginBottom: 12
+  },
+  pressionado: {
+    opacity: 0.7
   },
   cabecalho: {
     flexDirection: 'row',

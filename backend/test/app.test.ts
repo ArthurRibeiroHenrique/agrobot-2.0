@@ -14,6 +14,9 @@ const mocks = vi.hoisted(() => ({
   getVoiceJob: vi.fn(),
   confirmVoiceJob: vi.fn(),
   listActivities: vi.fn(),
+  getActivity: vi.fn(),
+  updateActivity: vi.fn(),
+  deleteActivity: vi.fn(),
   askAssistant: vi.fn(),
   listAssistantMessages: vi.fn(),
   answerVoiceJobAsQuestion: vi.fn()
@@ -37,7 +40,10 @@ vi.mock('../src/services/voice-job.service', () => ({
   findVoiceJobByClientId: mocks.findVoiceJobByClientId,
   getVoiceJob: mocks.getVoiceJob,
   confirmVoiceJob: mocks.confirmVoiceJob,
-  listActivities: mocks.listActivities
+  listActivities: mocks.listActivities,
+  getActivity: mocks.getActivity,
+  updateActivity: mocks.updateActivity,
+  deleteActivity: mocks.deleteActivity
 }));
 
 vi.mock('../src/services/assistant.service', () => ({
@@ -88,6 +94,78 @@ describe('autenticação', () => {
 
     expect(res.status).toBe(200);
     expect(mocks.listActivities).toHaveBeenCalledWith(USER_ID);
+  });
+});
+
+describe('detalhes e edição de registro', () => {
+  const ACTIVITY_ID = '33333333-3333-4333-8333-333333333333';
+
+  it('abre o registro pelo id', async () => {
+    mocks.getActivity.mockResolvedValue({ id: ACTIVITY_ID, activity_type: 'plantio' });
+
+    const res = await request(app).get(`/v1/activities/${ACTIVITY_ID}`).set(auth);
+
+    expect(res.status).toBe(200);
+    expect(mocks.getActivity).toHaveBeenCalledWith(ACTIVITY_ID, USER_ID);
+  });
+
+  it('retorna 404 para registro inacessível', async () => {
+    mocks.getActivity.mockResolvedValue(null);
+
+    const res = await request(app).get(`/v1/activities/${ACTIVITY_ID}`).set(auth);
+
+    expect(res.status).toBe(404);
+  });
+
+  it('retorna 404 para id fora do formato, sem consultar o banco', async () => {
+    const res = await request(app).get('/v1/activities/abc').set(auth);
+
+    expect(res.status).toBe(404);
+    expect(mocks.getActivity).not.toHaveBeenCalled();
+  });
+
+  it('salva só os campos conhecidos da edição', async () => {
+    mocks.updateActivity.mockResolvedValue({ id: ACTIVITY_ID });
+
+    const res = await request(app)
+      .patch(`/v1/activities/${ACTIVITY_ID}`)
+      .set(auth)
+      .send({
+        activity_type: 'aplicacao',
+        product: '  Glifosato ',
+        quantity: '2,5',
+        unit: '',
+        occurred_at: '2026-11-10',
+        user_id: 'outro-dono'
+      });
+
+    expect(res.status).toBe(200);
+    expect(mocks.updateActivity).toHaveBeenCalledWith(ACTIVITY_ID, USER_ID, {
+      activity_type: 'aplicacao',
+      product: 'Glifosato',
+      quantity: 2.5,
+      unit: null,
+      occurred_at: '2026-11-10'
+    });
+  });
+
+  it('recusa data inválida na edição', async () => {
+    const res = await request(app)
+      .patch(`/v1/activities/${ACTIVITY_ID}`)
+      .set(auth)
+      .send({ occurred_at: '31/02/2026' });
+
+    expect(res.status).toBe(400);
+    expect(mocks.updateActivity).not.toHaveBeenCalled();
+  });
+
+  it('apaga o registro', async () => {
+    mocks.deleteActivity.mockResolvedValue(undefined);
+
+    const res = await request(app).delete(`/v1/activities/${ACTIVITY_ID}`).set(auth);
+
+    expect(res.status).toBe(204);
+    expect(mocks.deleteActivity).toHaveBeenCalledWith(ACTIVITY_ID, USER_ID);
   });
 });
 

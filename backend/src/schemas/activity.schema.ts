@@ -87,3 +87,23 @@ export const activityDraftSchema = z
   .passthrough();
 
 export type ActivityDraft = z.infer<typeof activityDraftSchema>;
+
+const textOrNull = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+  z.string().trim().max(200).nullable()
+);
+
+// Edição de um registro já salvo no diário. Só os campos enviados mudam;
+// campos fora da lista (dono, transcrição, gravação) são ignorados.
+export const activityUpdateSchema = z.object({
+  activity_type: z.enum(ACTIVITY_TYPES).optional(),
+  product: textOrNull.optional(),
+  quantity: numericOrNull.optional(),
+  unit: textOrNull.optional(),
+  field_id: z.string().uuid().nullable().optional(),
+  field_name: textOrNull.optional(),
+  occurred_at: dateOrNull.optional(),
+  cost: numericOrNull.optional()
+});
+
+export type ActivityUpdate = z.infer<typeof activityUpdateSchema>;
