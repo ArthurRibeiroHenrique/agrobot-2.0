@@ -13,6 +13,7 @@ import { activitiesRouter } from './routes/activities.routes';
 import { farmsRouter } from './routes/farms.routes';
 import { assistantRouter } from './routes/assistant.routes';
 import { sharesRouter } from './routes/shares.routes';
+import { accountRouter } from './routes/account.routes';
 
 export function createApp() {
   const app = express();
@@ -46,6 +47,7 @@ export function createApp() {
   v1.use('/', farmsRouter);
   v1.use('/', assistantRouter);
   v1.use('/', sharesRouter);
+  v1.use('/', accountRouter);
 
   app.use('/v1', v1);
 

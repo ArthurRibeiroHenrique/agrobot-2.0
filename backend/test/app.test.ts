@@ -23,7 +23,8 @@ const mocks = vi.hoisted(() => ({
   leaveSharedDiary: vi.fn(),
   askAssistant: vi.fn(),
   listAssistantMessages: vi.fn(),
-  answerVoiceJobAsQuestion: vi.fn()
+  answerVoiceJobAsQuestion: vi.fn(),
+  deleteAccount: vi.fn()
 }));
 
 vi.mock('../src/lib/supabase', () => ({
@@ -62,6 +63,10 @@ vi.mock('../src/services/assistant.service', () => ({
   askAssistant: mocks.askAssistant,
   listAssistantMessages: mocks.listAssistantMessages,
   answerVoiceJobAsQuestion: mocks.answerVoiceJobAsQuestion
+}));
+
+vi.mock('../src/services/account.service', () => ({
+  deleteAccount: mocks.deleteAccount
 }));
 
 import { createApp } from '../src/app';
@@ -416,6 +421,22 @@ describe('compartilhamento do diário', () => {
 
     expect(res.status).toBe(204);
     expect(mocks.leaveSharedDiary).toHaveBeenCalledWith(USER_ID, OTHER_ID);
+  });
+});
+
+describe('DELETE /v1/account', () => {
+  it('exige login', async () => {
+    const res = await request(app).delete('/v1/account');
+
+    expect(res.status).toBe(401);
+    expect(mocks.deleteAccount).not.toHaveBeenCalled();
+  });
+
+  it('apaga a conta de quem está logado', async () => {
+    const res = await request(app).delete('/v1/account').set(auth);
+
+    expect(res.status).toBe(204);
+    expect(mocks.deleteAccount).toHaveBeenCalledWith(USER_ID);
   });
 });
 
