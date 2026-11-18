@@ -33,6 +33,8 @@ Por isso a API não tem rotas `/auth`.
 | GET, PATCH, DELETE /activities/:id | Detalhes, edição e exclusão de atividade |
 | GET /alerts | Alertas do produtor |
 | GET, POST /assistant/messages | Histórico e nova pergunta ao assistente |
+| GET, POST, DELETE /shares | Compartilhamento do diário |
+| DELETE /account | Exclusão definitiva da conta e de todos os dados |
 | GET /organizations/:id/metrics | Painel agregado da cooperativa |
 | POST /organizations/:id/invites | Convite de produtores |
 
@@ -126,3 +128,19 @@ propriedades e os talhões de quem compartilhou. Compartilhar é de mão única.
   se não há conta com o e-mail, 400 se é o próprio e-mail e 409 se já está compartilhado.
 - `DELETE /shares/:memberId` para de compartilhar com essa pessoa (204).
 - `DELETE /shares/received/:ownerId` deixa de ver o diário dessa pessoa (204).
+
+## Exclusão de conta
+
+`DELETE /account` apaga a conta de quem está logado (204). Exigida pela LGPD e pela Play Store.
+
+1. Apaga os áudios que ainda estiverem no bucket, na pasta `<userId>/`. Se falhar, responde 500 e a
+   conta continua existindo, para a pessoa tentar de novo.
+2. Apaga o usuário no Supabase Auth. O `on delete cascade` das tabelas leva junto `voice_jobs`,
+   `activities`, `farms`, `fields`, `assistant_messages` e `diary_shares`.
+
+Os registros que a pessoa criou no diário compartilhado de outra também somem, porque ficam com o
+`user_id` de quem criou. O app avisa isso antes de confirmar, e a política de privacidade também.
+
+A política de privacidade e a página de exclusão de conta ficam em `site/` e são publicadas no
+GitHub Pages: `https://arthurribeirohenrique.github.io/agrobot-2.0/privacidade/` e
+`.../excluir-conta/`. São esses os dois links pedidos pela Play Console.

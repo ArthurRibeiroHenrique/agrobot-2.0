@@ -31,3 +31,7 @@ export const TIPOS_DE_ATIVIDADE = [
   { valor: 'custo', rotulo: 'Custo' },
   { valor: 'outro', rotulo: 'Outro' }
 ];
+
+// Página pública da política de privacidade (GitHub Pages, pasta site/ do repositório).
+export const POLITICA_DE_PRIVACIDADE_URL =
+  'https://arthurribeirohenrique.github.io/agrobot-2.0/privacidade/';
