@@ -53,10 +53,16 @@ export async function escolherArquivoDeAudio(): Promise<string | null> {
   return arquivo.uri;
 }
 
+export function fusoDoAparelho(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
 // O client_id identifica a gravação: reenviar a mesma não cria outro registro.
 export function enviarGravacao(input: {
   uri: string;
   clientId: string;
+  gravadaEm: string;
+  timezone: string;
   fieldId?: string | null;
 }): Promise<VoiceJob> {
   const form = new FormData();
@@ -65,7 +71,8 @@ export function enviarGravacao(input: {
   // o arquivo precisa ir como File do expo-file-system, que já traz nome e tipo.
   form.append('audio', new File(input.uri) as unknown as Blob);
   form.append('client_id', input.clientId);
-  form.append('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
+  form.append('timezone', input.timezone);
+  form.append('recorded_at', input.gravadaEm);
 
   if (input.fieldId) {
     form.append('field_id', input.fieldId);

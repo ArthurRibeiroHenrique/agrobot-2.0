@@ -15,6 +15,7 @@ import { useAskVoiceJob, useConfirmVoiceJob, useVoiceJob } from '../../hooks/use
 import { cores } from '../../lib/constants';
 import { lerData, lerNumero } from '../../lib/format';
 import { mensagemDeErro } from '../../services/api';
+import { useOfflineStore } from '../../store/offlineStore';
 import type { ActivityDraft, VoiceJob } from '../../types';
 
 const MENSAGEM_DE_STATUS: Record<string, string> = {
@@ -25,6 +26,9 @@ const MENSAGEM_DE_STATUS: Record<string, string> = {
 
 // Status em que já existe rascunho para preencher o formulário.
 const COM_RASCUNHO = ['needs_confirmation', 'answered'];
+
+// Status em que não falta nada do produtor: a gravação sai da lista "para conferir".
+const RESOLVIDO = ['answered', 'confirmed', 'failed'];
 
 // Gravações antigas têm só um rascunho em draft.
 function rascunhosDoJob(job: VoiceJob | undefined): Partial<ActivityDraft>[] {
@@ -50,6 +54,18 @@ export default function ConfirmDraftScreen() {
   const status = job.data?.status;
   const intent = job.data?.intent;
   const resposta = job.data?.answer;
+
+  useEffect(() => {
+    if (id && status && RESOLVIDO.includes(status)) {
+      useOfflineStore.getState().removerPorJob(id);
+    }
+  }, [id, status]);
+
+  // Desistiu desta gravação para gravar outra: ela não fica esperando conferência.
+  function gravarDeNovo() {
+    if (id) useOfflineStore.getState().removerPorJob(id);
+    router.replace('/activity/new-voice');
+  }
 
   // Preenche os formulários uma única vez, quando os rascunhos chegam.
   useEffect(() => {
@@ -104,6 +120,7 @@ export default function ConfirmDraftScreen() {
         }))
       );
 
+      if (id) useOfflineStore.getState().removerPorJob(id);
       router.dismissTo('/diary');
     } catch (falha) {
       setErro(mensagemDeErro(falha));
@@ -139,7 +156,7 @@ export default function ConfirmDraftScreen() {
         </Paragrafo>
         <BotaoGrande
           texto="Gravar de novo"
-          onPress={() => router.replace('/activity/new-voice')}
+          onPress={gravarDeNovo}
         />
       </Tela>
     );
@@ -185,7 +202,7 @@ export default function ConfirmDraftScreen() {
         />
         <BotaoGrande
           texto="Fazer outra pergunta"
-          onPress={() => router.replace('/activity/new-voice')}
+          onPress={gravarDeNovo}
         />
         <View style={styles.espaco} />
         <BotaoGrande
@@ -282,7 +299,7 @@ export default function ConfirmDraftScreen() {
       <BotaoGrande
         texto="Gravar de novo"
         variante="secundario"
-        onPress={() => router.replace('/activity/new-voice')}
+        onPress={gravarDeNovo}
       />
 
       {!resposta && !semFala && status === 'needs_confirmation' ? (

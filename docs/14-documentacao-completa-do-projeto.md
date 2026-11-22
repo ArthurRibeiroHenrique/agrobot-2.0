@@ -288,7 +288,7 @@ Base: `http://localhost:3333` (local) ou o endereço publicado. Todas as rotas `
 | Método | Rota | Descrição |
 | --- | --- | --- |
 | GET | `/health` | Verifica se o serviço está no ar (sem login) |
-| POST | `/v1/voice-jobs` | Envia um áudio (`multipart/form-data`, campo `audio`; opcionais `client_id`, `farm_id`, `field_id`, `timezone`) |
+| POST | `/v1/voice-jobs` | Envia um áudio (`multipart/form-data`, campo `audio`; opcionais `client_id`, `farm_id`, `field_id`, `timezone` e `recorded_at`, o momento da gravação em ISO 8601) |
 | GET | `/v1/voice-jobs/:id` | Status, transcrição, rascunhos e resposta da tarefa |
 | POST | `/v1/voice-jobs/:id/confirm` | Confirma os registros (`{ "activities": [ … ] }`) |
 | POST | `/v1/voice-jobs/:id/ask` | Trata a gravação como pergunta (quando a intenção era incerta) |
@@ -499,7 +499,7 @@ O perfil `production` gera o pacote para a Google Play. Passo a passo em
 | 1. Base do backend | Feita |
 | 2. Fluxo de voz de ponta a ponta | Feita |
 | 3. Catálogo de produtos com dias de carência, cálculo e alertas | Assistente feito; carência e alertas pendentes |
-| 4. Modo offline persistente | Pendente (hoje a fila do app fica só na memória e se perde ao fechar o app) |
+| 4. Modo offline persistente | Feita para a gravação: fila guardada no aparelho e enviada sozinha quando a internet volta (ver docs/05) |
 | 5. Piloto com cinco produtores | Pendente |
 | 6. Módulo da cooperativa (painel, convites, consentimento LGPD) | Pendente |
 

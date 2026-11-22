@@ -242,6 +242,39 @@ describe('POST /v1/voice-jobs', () => {
     expect(mocks.enqueueVoiceJob).toHaveBeenCalledWith(JOB_ID);
   });
 
+  it('guarda o momento da gravação enviado pela fila offline', async () => {
+    mocks.uploadAudio.mockResolvedValue(`${USER_ID}/audio.m4a`);
+    mocks.createVoiceJob.mockResolvedValue({
+      job: { id: JOB_ID, status: 'queued' },
+      duplicated: false,
+      error: null
+    });
+
+    const res = await request(app)
+      .post('/v1/voice-jobs')
+      .set(auth)
+      .field('recorded_at', '2026-10-20T17:00:00.000-03:00')
+      .attach('audio', Buffer.from('audio'), 'fala.m4a');
+
+    expect(res.status).toBe(202);
+    expect(mocks.createVoiceJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({ recorded_at: '2026-10-20T17:00:00.000-03:00' })
+      })
+    );
+  });
+
+  it('recusa momento da gravação fora do formato ISO', async () => {
+    const res = await request(app)
+      .post('/v1/voice-jobs')
+      .set(auth)
+      .field('recorded_at', 'ontem')
+      .attach('audio', Buffer.from('audio'), 'fala.m4a');
+
+    expect(res.status).toBe(400);
+    expect(mocks.uploadAudio).not.toHaveBeenCalled();
+  });
+
   it('não duplica quando o mesmo client_id é reenviado', async () => {
     const clientId = '33333333-3333-4333-8333-333333333333';
     mocks.findVoiceJobByClientId.mockResolvedValue({ id: JOB_ID, status: 'extracting' });

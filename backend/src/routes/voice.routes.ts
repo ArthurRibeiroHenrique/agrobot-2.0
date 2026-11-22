@@ -45,7 +45,10 @@ const createVoiceJobSchema = z.object({
   client_id: z.string().uuid().optional(),
   farm_id: z.string().uuid().optional(),
   field_id: z.string().uuid().optional(),
-  timezone: z.string().optional()
+  timezone: z.string().optional(),
+  // Quando o áudio foi gravado. Na fila offline, o envio pode acontecer horas ou dias depois,
+  // e "hoje" na fala tem que ser o dia da gravação, não o do envio.
+  recorded_at: z.string().datetime({ offset: true }).optional()
 });
 
 export const voiceRouter = Router();
@@ -102,6 +105,7 @@ voiceRouter.post(
         farm_id: body.farm_id ?? null,
         field_id: body.field_id ?? null,
         timezone: body.timezone ?? null,
+        recorded_at: body.recorded_at ?? null,
         original_name: req.file.originalname,
         mime_type: req.file.mimetype
       }

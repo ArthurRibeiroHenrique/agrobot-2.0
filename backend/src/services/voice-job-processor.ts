@@ -2,7 +2,7 @@ import { ActivityDraft, Intent } from '../schemas/activity.schema';
 import { askFromVoice, VoiceAnswer } from './assistant.service';
 import { transcribeAudio } from './transcription.service';
 import { extractActivityFromTranscript } from './extraction.service';
-import { buildDrafts, emptyDraft, todayInTimezone } from './draft.service';
+import { buildDrafts, emptyDraft, recordingDate, todayInTimezone } from './draft.service';
 import { listFields } from './farm.service';
 import { findVoiceJobById, updateVoiceJob } from './voice-job.service';
 import { removeAudio } from './storage.service';
@@ -56,8 +56,10 @@ export async function processVoiceJob(
     });
 
     const metadata = (job.metadata ?? {}) as Record<string, unknown>;
+    // "Hoje" é o dia em que o produtor gravou, que pode ser anterior ao envio (fila offline).
     const today = todayInTimezone(
-      typeof metadata.timezone === 'string' ? metadata.timezone : null
+      typeof metadata.timezone === 'string' ? metadata.timezone : null,
+      recordingDate(metadata.recorded_at)
     );
 
     // Um rascunho por atividade relatada; a fala pode citar vários talhões.

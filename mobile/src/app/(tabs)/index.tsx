@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { FilaDeGravacoes } from '../../components/cards/FilaDeGravacoes';
 import { UltimoRegistroCard } from '../../components/cards/UltimoRegistroCard';
 import { BotaoGrande } from '../../components/ui/BotaoGrande';
 import { Erro, Paragrafo, Tela, Titulo } from '../../components/ui/Tela';
@@ -25,6 +26,8 @@ export default function HomeScreen() {
       />
 
       <View style={styles.espaco} />
+
+      <FilaDeGravacoes />
 
       {erro ? <Erro>{mensagemDeErro(erro)}</Erro> : null}
       {!carregando && !erro ? (
