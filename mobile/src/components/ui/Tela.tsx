@@ -66,13 +66,14 @@ const styles = StyleSheet.create({
     marginBottom: 8
   },
   paragrafo: {
-    fontSize: 17,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 26,
     color: cores.textoSuave,
     marginBottom: 16
   },
   erro: {
-    fontSize: 16,
+    fontSize: 17,
+    fontWeight: '600',
     color: cores.erro,
     marginBottom: 12
   }

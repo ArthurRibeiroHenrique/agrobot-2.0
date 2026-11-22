@@ -338,7 +338,8 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   transcricaoRotulo: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
     color: cores.textoSuave,
     marginBottom: 4
   },

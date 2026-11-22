@@ -36,7 +36,8 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   rotulo: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '600',
     color: cores.textoSuave,
     marginBottom: 4
   },
