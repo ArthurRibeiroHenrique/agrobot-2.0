@@ -24,7 +24,9 @@ const mocks = vi.hoisted(() => ({
   askAssistant: vi.fn(),
   listAssistantMessages: vi.fn(),
   answerVoiceJobAsQuestion: vi.fn(),
-  deleteAccount: vi.fn()
+  deleteAccount: vi.fn(),
+  listarAlertas: vi.fn(),
+  sugerirCarencia: vi.fn()
 }));
 
 vi.mock('../src/lib/supabase', () => ({
@@ -67,6 +69,11 @@ vi.mock('../src/services/assistant.service', () => ({
 
 vi.mock('../src/services/account.service', () => ({
   deleteAccount: mocks.deleteAccount
+}));
+
+vi.mock('../src/services/carencia.service', () => ({
+  listarAlertas: mocks.listarAlertas,
+  sugerirCarencia: mocks.sugerirCarencia
 }));
 
 import { createApp } from '../src/app';
@@ -482,5 +489,93 @@ describe('erros', () => {
 
     expect(res.status).toBe(500);
     expect(JSON.stringify(res.body)).not.toContain('senha');
+  });
+});
+
+describe('GET /v1/alerts', () => {
+  it('calcula pelo dia de hoje no fuso do produtor', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-23T01:30:00Z'));
+    mocks.listarAlertas.mockResolvedValue([]);
+
+    try {
+      const res = await request(app)
+        .get('/v1/alerts?timezone=America/Sao_Paulo')
+        .set(auth);
+
+      expect(res.status).toBe(200);
+      expect(mocks.listarAlertas).toHaveBeenCalledWith(USER_ID, '2026-11-22');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('exige login', async () => {
+    const res = await request(app).get('/v1/alerts');
+
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('GET /v1/withholding/suggestion', () => {
+  it('devolve a sugestão para o produto e o talhão', async () => {
+    const fieldId = '55555555-5555-4555-8555-555555555555';
+    mocks.sugerirCarencia.mockResolvedValue({ dias: 30, origem: 'bula_anterior', referencia: null });
+
+    const res = await request(app)
+      .get(`/v1/withholding/suggestion?product=Glifosato&field_id=${fieldId}`)
+      .set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ dias: 30, origem: 'bula_anterior', referencia: null });
+    expect(mocks.sugerirCarencia).toHaveBeenCalledWith(USER_ID, 'Glifosato', fieldId);
+  });
+
+  it('devolve null quando não há o que sugerir', async () => {
+    mocks.sugerirCarencia.mockResolvedValue(null);
+
+    const res = await request(app)
+      .get('/v1/withholding/suggestion?product=Produto%20novo')
+      .set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toBeNull();
+  });
+
+  it('recusa pedido sem produto', async () => {
+    const res = await request(app).get('/v1/withholding/suggestion').set(auth);
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('PATCH /v1/activities/:id com carência', () => {
+  const ACTIVITY_ID = '66666666-6666-4666-8666-666666666666';
+
+  it('aceita os dias de carência da bula', async () => {
+    mocks.updateActivity.mockResolvedValue({ id: ACTIVITY_ID, withholding_days: 30 });
+
+    const res = await request(app)
+      .patch(`/v1/activities/${ACTIVITY_ID}`)
+      .set(auth)
+      .send({ withholding_days: '30' });
+
+    expect(res.status).toBe(200);
+    expect(mocks.updateActivity).toHaveBeenCalledWith(ACTIVITY_ID, USER_ID, {
+      withholding_days: 30
+    });
+  });
+
+  it('recusa carência fora do possível', async () => {
+    for (const dias of [-1, 400, 2.5]) {
+      const res = await request(app)
+        .patch(`/v1/activities/${ACTIVITY_ID}`)
+        .set(auth)
+        .send({ withholding_days: dias });
+
+      expect(res.status).toBe(400);
+    }
+
+    expect(mocks.updateActivity).not.toHaveBeenCalled();
   });
 });

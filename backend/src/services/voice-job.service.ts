@@ -6,6 +6,7 @@ import {
 } from '../schemas/activity.schema';
 import { HttpError } from '../utils/http-error';
 import { userCanUseField } from './farm.service';
+import { lembrarCarencia } from './carencia.service';
 import { accessibleUserIds } from './sharing.service';
 
 const UNIQUE_VIOLATION = '23505';
@@ -175,6 +176,9 @@ export async function confirmVoiceJob(
         occurred_at: draft.occurred_at,
         cost: draft.cost,
         currency: draft.currency,
+        // Carência só faz sentido em aplicação de defensivo.
+        withholding_days:
+          draft.activity_type === 'aplicacao' ? (draft.withholding_days ?? null) : null,
         confidence: draft.confidence,
         raw_transcript: job.transcript ?? draft.raw_transcript ?? '',
         status: 'confirmed'
@@ -195,6 +199,8 @@ export async function confirmVoiceJob(
     (a, b) => a.draft_index - b.draft_index
   );
 
+  await guardarCarenciaInformada(userId, saved);
+
   await updateVoiceJob(id, {
     status: 'confirmed',
     draft: parsedDrafts[0],
@@ -203,6 +209,16 @@ export async function confirmVoiceJob(
   });
 
   return saved;
+}
+
+// A sugestão de carência é uma ajuda: se falhar ao guardar, o registro continua salvo.
+async function guardarCarenciaInformada(
+  userId: string,
+  registros: Parameters<typeof lembrarCarencia>[1]
+) {
+  await lembrarCarencia(userId, registros).catch((error) => {
+    console.error('Não foi possível guardar a carência informada:', error);
+  });
 }
 
 // Registros do usuário e de quem compartilhou o diário com ele.
@@ -264,6 +280,11 @@ export async function updateActivity(
     patch.currency = input.cost !== null ? current.currency || 'BRL' : null;
   }
 
+  // Mudou para outro tipo de atividade: a carência deixa de valer.
+  if (input.activity_type && input.activity_type !== 'aplicacao') {
+    patch.withholding_days = null;
+  }
+
   const { data, error } = await supabaseAdmin
     .from('activities')
     .update(patch)
@@ -272,6 +293,10 @@ export async function updateActivity(
     .single();
 
   if (error) throw error;
+
+  if ('withholding_days' in input) {
+    await guardarCarenciaInformada(userId, [data]);
+  }
 
   return data;
 }
