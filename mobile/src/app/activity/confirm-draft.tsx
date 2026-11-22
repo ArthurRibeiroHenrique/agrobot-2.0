@@ -13,7 +13,7 @@ import { Erro, Paragrafo, Tela, Titulo } from '../../components/ui/Tela';
 import { useFields } from '../../hooks/useFarm';
 import { useAskVoiceJob, useConfirmVoiceJob, useVoiceJob } from '../../hooks/useVoiceJob';
 import { cores } from '../../lib/constants';
-import { lerData, lerNumero } from '../../lib/format';
+import { lerData, lerDiasDeCarencia, lerNumero } from '../../lib/format';
 import { mensagemDeErro } from '../../services/api';
 import { useOfflineStore } from '../../store/offlineStore';
 import type { ActivityDraft, VoiceJob } from '../../types';
@@ -102,6 +102,20 @@ export default function ConfirmDraftScreen() {
       return;
     }
 
+    const carencias = forms.map((form) =>
+      form.tipo === 'aplicacao' ? lerDiasDeCarencia(form.carencia) : null
+    );
+    const carenciaInvalida = carencias.findIndex((dias) => dias === undefined);
+
+    if (carenciaInvalida >= 0) {
+      setErro(
+        forms.length > 1
+          ? `Confira a carência do registro ${carenciaInvalida + 1}: um número de 0 a 365 dias.`
+          : 'Confira a carência: um número de 0 a 365 dias, como está na bula.'
+      );
+      return;
+    }
+
     setErro(null);
 
     try {
@@ -116,7 +130,8 @@ export default function ConfirmDraftScreen() {
           field_id: form.talhaoId,
           field_name: form.talhaoNome.trim() || null,
           occurred_at: datas[indice],
-          cost: lerNumero(form.custo)
+          cost: lerNumero(form.custo),
+          withholding_days: carencias[indice] ?? null
         }))
       );
 

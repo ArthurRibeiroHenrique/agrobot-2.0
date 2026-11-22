@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost } from '../services/api';
 import type { Activity, ActivityDraft, VoiceJob } from '../types';
 import { CHAVE_ATIVIDADES } from './useActivities';
+import { CHAVE_ALERTAS } from './useCarencia';
 import { CHAVE_PERGUNTAS } from './useAssistant';
 
 const EM_PROCESSAMENTO = ['queued', 'transcribing', 'extracting'];
@@ -27,7 +28,10 @@ export function useConfirmVoiceJob(id: string | undefined) {
   return useMutation({
     mutationFn: (activities: Partial<ActivityDraft>[]) =>
       apiPost<Activity[]>(`/voice-jobs/${id}/confirm`, { activities }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE_ATIVIDADES })
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: CHAVE_ALERTAS });
+      return queryClient.invalidateQueries({ queryKey: CHAVE_ATIVIDADES });
+    }
   });
 }
 

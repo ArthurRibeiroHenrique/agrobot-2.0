@@ -10,6 +10,8 @@ export type Activity = {
   occurred_at: string | null;
   cost: number | null;
   currency: string | null;
+  // Dias de carência da bula (só em aplicação de defensivo).
+  withholding_days: number | null;
   raw_transcript: string | null;
   created_at: string;
 };
@@ -24,6 +26,7 @@ export type ActivityDraft = {
   occurred_at: string | null;
   cost: number | null;
   currency: string | null;
+  withholding_days?: number | null;
   confidence?: number;
   missing_fields?: string[];
   raw_transcript?: string;
@@ -99,4 +102,26 @@ export type SharePerson = {
 export type Shares = {
   shared_with: SharePerson[];
   shared_by: SharePerson[];
+};
+
+// em_carencia: ainda não pode colher. liberado: já pode. sem_carencia: falta olhar a bula.
+export type AlertaDeCarencia = {
+  activity_id: string;
+  product: string | null;
+  field_id: string | null;
+  field_name: string | null;
+  crop: string | null;
+  applied_at: string;
+  withholding_days: number | null;
+} & (
+  | { estado: 'em_carencia'; liberaEm: string; diasRestantes: number }
+  | { estado: 'liberado'; liberaEm: string; diasDesdeLiberacao: number }
+  | { estado: 'sem_carencia' }
+);
+
+// bula_anterior: o que o próprio produtor já leu na bula. catalogo: conferido por um técnico.
+export type SugestaoDeCarencia = {
+  dias: number;
+  origem: 'bula_anterior' | 'catalogo';
+  referencia: string | null;
 };

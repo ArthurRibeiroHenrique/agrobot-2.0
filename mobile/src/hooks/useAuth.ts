@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { limparAvisosDeCarencia } from '../services/avisosDeCarencia';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../store/authStore';
 
@@ -63,6 +64,8 @@ export async function confirmarCodigo(contato: string, codigo: string) {
 }
 
 export async function sair() {
+  // Os avisos de colheita são da lavoura de quem saiu.
+  await limparAvisosDeCarencia();
   await supabase.auth.signOut();
 }
 

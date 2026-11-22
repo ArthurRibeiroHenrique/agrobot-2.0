@@ -31,7 +31,8 @@ Por isso a API não tem rotas `/auth`.
 | POST /voice-jobs/:id/ask | Trata a gravação como pergunta e responde |
 | GET, POST /activities | Diário agrícola |
 | GET, PATCH, DELETE /activities/:id | Detalhes, edição e exclusão de atividade |
-| GET /alerts | Alertas do produtor |
+| GET /alerts | Carência das aplicações: em carência, falta a bula, já liberado |
+| GET /withholding/suggestion | Sugestão de dias de carência para um produto no talhão |
 | GET, POST /assistant/messages | Histórico e nova pergunta ao assistente |
 | GET, POST, DELETE /shares | Compartilhamento do diário |
 | DELETE /account | Exclusão definitiva da conta e de todos os dados |
@@ -129,6 +130,32 @@ propriedades e os talhões de quem compartilhou. Compartilhar é de mão única.
 - `DELETE /shares/:memberId` para de compartilhar com essa pessoa (204).
 - `DELETE /shares/received/:ownerId` deixa de ver o diário dessa pessoa (204).
 
+## Carência dos defensivos
+
+A carência (intervalo de segurança) é dado de segurança alimentar: **nunca** é estimada pela IA.
+A regra fica em `backend/src/rules/carencia.ts`, com testes em `backend/test/carencia.test.ts`.
+
+- Os dias vêm da bula. O produtor informa em `withholding_days` (inteiro de 0 a 365) ao confirmar
+  o rascunho ou editar uma atividade do tipo `aplicacao`. Em outros tipos, o valor é ignorado.
+- Liberação da colheita: `data da aplicação + dias de carência`. Antes disso, `em_carencia`; a partir
+  dessa data, `liberado`. Sem os dias, `sem_carencia`: o app pede para olhar a bula.
+- `GET /alerts?timezone=America/Sao_Paulo` devolve, para o produtor e os diários compartilhados com
+  ele, as aplicações em carência (a que libera antes primeiro), as dos últimos 60 dias sem carência
+  informada e as liberadas na última semana. Campos: `activity_id`, `product`, `field_id`,
+  `field_name`, `crop`, `applied_at`, `withholding_days`, `estado`, `liberaEm`, `diasRestantes` ou
+  `diasDesdeLiberacao`.
+- `GET /withholding/suggestion?product=Glifosato&field_id=<uuid>` sugere os dias para pré-preencher,
+  sempre para a **mesma cultura** do talhão: primeiro o que o próprio produtor já informou
+  (`withholding_memory`, `origem: bula_anterior`), depois o catálogo conferido
+  (`withholding_catalog`, `origem: catalogo`, com a referência da bula). Sem nada, devolve `null`.
+  O app mostra a sugestão como botão; o produtor confirma tocando nele.
+- O catálogo começa vazio. Só entra nele o que um técnico conferiu na bula registrada no MAPA, com
+  `source`, `checked_by` e `checked_at`. A AgroAPI da Embrapa (AGROFIT) lista produtos, registros,
+  culturas e links das bulas, mas a documentação pública não traz o intervalo de segurança como campo.
+
+No aparelho, o app agenda um aviso local às 7h do dia da liberação (funciona sem internet) e
+refaz os avisos sempre que a lista muda. Ao sair ou excluir a conta, os avisos são cancelados.
+
 ## Exclusão de conta
 
 `DELETE /account` apaga a conta de quem está logado (204). Exigida pela LGPD e pela Play Store.
@@ -136,7 +163,7 @@ propriedades e os talhões de quem compartilhou. Compartilhar é de mão única.
 1. Apaga os áudios que ainda estiverem no bucket, na pasta `<userId>/`. Se falhar, responde 500 e a
    conta continua existindo, para a pessoa tentar de novo.
 2. Apaga o usuário no Supabase Auth. O `on delete cascade` das tabelas leva junto `voice_jobs`,
-   `activities`, `farms`, `fields`, `assistant_messages` e `diary_shares`.
+   `activities`, `farms`, `fields`, `assistant_messages`, `diary_shares` e `withholding_memory`.
 
 Os registros que a pessoa criou no diário compartilhado de outra também somem, porque ficam com o
 `user_id` de quem criou. O app avisa isso antes de confirmar, e a política de privacidade também.

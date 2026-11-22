@@ -48,7 +48,14 @@
           "backgroundColor": "#2E7D32"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/monochrome-icon.png",
+          "color": "#2E7D32"
+        }
+      ]
     ],
     "extra": {
       "router": {

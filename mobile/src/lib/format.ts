@@ -46,6 +46,18 @@ export function lerNumero(texto: string): number | null {
   return Number.isNaN(numero) ? null : numero;
 }
 
+// Dias de carência: inteiro de 0 a 365. Vazio é null; texto inválido é undefined (erro).
+export function lerDiasDeCarencia(texto: string): number | null | undefined {
+  const limpo = texto.trim();
+
+  if (!limpo) return null;
+  if (!/^\d{1,3}$/.test(limpo)) return undefined;
+
+  const dias = Number(limpo);
+
+  return dias <= 365 ? dias : undefined;
+}
+
 export function formatarNumero(numero: number | null | undefined): string {
   if (numero === null || numero === undefined) return '';
 

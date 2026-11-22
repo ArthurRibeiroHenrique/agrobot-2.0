@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiDelete, apiGet, apiPatch } from '../services/api';
 import type { Activity, ActivityDraft } from '../types';
+import { CHAVE_ALERTAS } from './useCarencia';
 
 export const CHAVE_ATIVIDADES = ['activities'];
 
@@ -46,6 +47,7 @@ export type AlteracaoDeAtividade = Pick<
   | 'field_name'
   | 'occurred_at'
   | 'cost'
+  | 'withholding_days'
 >;
 
 export function useUpdateActivity(id: string | undefined) {
@@ -54,7 +56,10 @@ export function useUpdateActivity(id: string | undefined) {
   return useMutation({
     mutationFn: (alteracao: AlteracaoDeAtividade) =>
       apiPatch<Activity>(`/activities/${id}`, alteracao),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: CHAVE_ATIVIDADES })
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: CHAVE_ALERTAS });
+      return queryClient.invalidateQueries({ queryKey: CHAVE_ATIVIDADES });
+    }
   });
 }
 
@@ -65,6 +70,7 @@ export function useDeleteActivity(id: string | undefined) {
     mutationFn: () => apiDelete(`/activities/${id}`),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: [...CHAVE_ATIVIDADES, id], exact: true });
+      void queryClient.invalidateQueries({ queryKey: CHAVE_ALERTAS });
       return queryClient.invalidateQueries({ queryKey: CHAVE_ATIVIDADES, exact: true });
     }
   });
