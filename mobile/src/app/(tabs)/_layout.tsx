@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router/js-tabs';
 import { Text } from 'react-native';
 
+import { useSincronizacaoAutomatica } from '../../hooks/useSyncQueue';
 import { cores } from '../../lib/constants';
 
 function icone(simbolo: string) {
@@ -10,6 +11,9 @@ function icone(simbolo: string) {
 }
 
 export default function TabsLayout() {
+  // As abas ficam montadas em toda a área logada: daqui a fila offline é enviada sozinha.
+  useSincronizacaoAutomatica();
+
   return (
     <Tabs
       screenOptions={{

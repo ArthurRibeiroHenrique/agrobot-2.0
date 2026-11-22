@@ -3,16 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { BotaoGrande } from '../../components/ui/BotaoGrande';
-import { Erro, Tela } from '../../components/ui/Tela';
+import { Erro, Paragrafo, Tela, Titulo } from '../../components/ui/Tela';
 import { GravadorVoz } from '../../components/voice/GravadorVoz';
 import { useVoiceRecording } from '../../hooks/useVoiceRecording';
 import { cores } from '../../lib/constants';
 import { mensagemDeErro } from '../../services/api';
-import {
-  enviarGravacao,
-  escolherArquivoDeAudio,
-  novoClientId
-} from '../../services/audio';
+import { escolherArquivoDeAudio } from '../../services/audio';
+import { descartarDaFila, enviarDaFila, guardarGravacao } from '../../services/filaOffline';
 
 // Gravações mais curtas que isso quase sempre são toque acidental.
 const DURACAO_MINIMA_MS = 1000;
@@ -21,19 +18,13 @@ const DURACAO_MINIMA_MS = 1000;
 // Dois minutos sobram para relatar várias atividades ou fazer uma pergunta.
 const DURACAO_MAXIMA_MS = 2 * 60 * 1000;
 
-type Pendente = {
-  uri: string;
-  clientId: string;
-};
-
 export default function NewVoiceScreen() {
   const router = useRouter();
   const { gravando, duracaoMs, iniciar, parar } = useVoiceRecording();
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  // Guarda a gravação que falhou no envio, para tentar de novo sem regravar.
-  const pendente = useRef<Pendente | null>(null);
-  const [temPendente, setTemPendente] = useState(false);
+  // Sem sinal: a gravação ficou guardada na fila e vai sozinha quando a internet voltar.
+  const [guardada, setGuardada] = useState(false);
   const parandoPorLimite = useRef(false);
 
   // No limite de duração, para e envia sozinho, como se o produtor tivesse tocado em parar.
@@ -50,22 +41,32 @@ export default function NewVoiceScreen() {
     // alternarGravacao muda a cada render; só a duração e o estado da gravação importam aqui.
   }, [gravando, duracaoMs]);
 
-  async function enviar(gravacao: Pendente) {
+  // Guarda no celular primeiro e só depois tenta enviar: sem sinal, nada se perde.
+  async function processar(uri: string) {
     setErro(null);
     setEnviando(true);
 
     try {
-      const job = await enviarGravacao(gravacao);
+      const item = await guardarGravacao(uri);
+      const resultado = await enviarDaFila(item);
 
-      pendente.current = null;
-      setTemPendente(false);
-      router.replace({ pathname: '/activity/confirm-draft', params: { id: job.id } });
+      if (resultado.tipo === 'enviada') {
+        router.replace({ pathname: '/activity/confirm-draft', params: { id: resultado.job.id } });
+        return;
+      }
+
+      if (resultado.tipo === 'sem-conexao') {
+        setGuardada(true);
+      } else {
+        // O servidor não aceita esse áudio: guardar para tentar de novo não adianta.
+        descartarDaFila(item.clientId);
+        setErro(resultado.erro);
+      }
     } catch (falha) {
-      pendente.current = gravacao;
-      setTemPendente(true);
       setErro(mensagemDeErro(falha));
-      setEnviando(false);
     }
+
+    setEnviando(false);
   }
 
   async function alternarGravacao() {
@@ -73,8 +74,7 @@ export default function NewVoiceScreen() {
 
     try {
       if (!gravando) {
-        pendente.current = null;
-        setTemPendente(false);
+        setGuardada(false);
 
         const permitido = await iniciar();
 
@@ -95,7 +95,7 @@ export default function NewVoiceScreen() {
         return;
       }
 
-      await enviar({ uri, clientId: novoClientId() });
+      await processar(uri);
     } catch (falha) {
       setErro(mensagemDeErro(falha));
     }
@@ -109,13 +109,28 @@ export default function NewVoiceScreen() {
 
       if (!uri) return;
 
-      pendente.current = null;
-      setTemPendente(false);
-
-      await enviar({ uri, clientId: novoClientId() });
+      setGuardada(false);
+      await processar(uri);
     } catch (falha) {
       setErro(mensagemDeErro(falha));
     }
+  }
+
+  if (guardada && !gravando) {
+    return (
+      <Tela>
+        <Titulo>Gravação guardada</Titulo>
+        <Paragrafo>
+          Não deu para enviar agora, provavelmente por falta de sinal. Sua gravação ficou
+          guardada no celular e será enviada sozinha quando a internet voltar. Depois é só
+          conferir na tela inicial.
+        </Paragrafo>
+        <BotaoGrande texto="Gravar outra" onPress={() => setGuardada(false)} />
+        <View style={styles.arquivo}>
+          <BotaoGrande texto="Voltar ao início" variante="secundario" onPress={() => router.back()} />
+        </View>
+      </Tela>
+    );
   }
 
   return (
@@ -142,13 +157,6 @@ export default function NewVoiceScreen() {
       </View>
 
       <Erro>{erro}</Erro>
-
-      {temPendente && !enviando && !gravando ? (
-        <BotaoGrande
-          texto="Tentar enviar de novo"
-          onPress={() => pendente.current && enviar(pendente.current)}
-        />
-      ) : null}
 
       {!enviando && !gravando ? (
         <View style={styles.arquivo}>
