@@ -1,3 +1,4 @@
+import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -10,6 +11,11 @@ import { cores } from '../../lib/constants';
 import { mensagemDeErro } from '../../services/api';
 import { escolherArquivoDeAudio } from '../../services/audio';
 import { descartarDaFila, enviarDaFila, guardarGravacao } from '../../services/filaOffline';
+
+// Vibração ao começar e ao parar: o produtor sente que funcionou sem olhar a tela (sol, luva).
+function vibrar(estilo: ImpactFeedbackStyle) {
+  void impactAsync(estilo).catch(() => {});
+}
 
 // Gravações mais curtas que isso quase sempre são toque acidental.
 const DURACAO_MINIMA_MS = 1000;
@@ -82,6 +88,8 @@ export default function NewVoiceScreen() {
           setErro(
             'O AgroBot precisa do microfone para gravar. Libere a permissão nas configurações do celular.'
           );
+        } else {
+          vibrar(ImpactFeedbackStyle.Heavy);
         }
 
         return;
@@ -89,6 +97,8 @@ export default function NewVoiceScreen() {
 
       const duracao = duracaoMs;
       const uri = await parar();
+
+      vibrar(ImpactFeedbackStyle.Medium);
 
       if (!uri || duracao < DURACAO_MINIMA_MS) {
         setErro('A gravação ficou muito curta. Toque e fale de novo.');

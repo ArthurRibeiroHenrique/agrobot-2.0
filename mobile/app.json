@@ -5,7 +5,8 @@
     "scheme": "agrobot",
     "version": "1.0.7",
     "orientation": "portrait",
-    "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -21,7 +22,12 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "monochromeImage": "./assets/images/monochrome-icon.png",
+        "backgroundColor": "#2E7D32"
+      }
     },
     "plugins": [
       "expo-router",
@@ -32,7 +38,17 @@
         }
       ],
       "expo-status-bar",
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#2E7D32"
+        }
+      ],
+      "expo-font"
     ],
     "extra": {
       "router": {

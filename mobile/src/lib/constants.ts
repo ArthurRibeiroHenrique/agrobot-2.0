@@ -6,14 +6,15 @@ export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 // Textos e botões grandes: o público tem pouca familiaridade com telas.
+// Contraste alto (texto suave acima de 8:1 sobre o fundo) para ler no sol do campo.
 export const cores = {
   primaria: '#2E7D32',
   primariaEscura: '#1B5E20',
   fundo: '#F4F7F2',
   cartao: '#FFFFFF',
-  texto: '#1C2B1E',
-  textoSuave: '#5B6B5D',
-  borda: '#D5DDD3',
+  texto: '#142016',
+  textoSuave: '#3D4B3F',
+  borda: '#AEBCAB',
   alerta: '#B45309',
   alertaFundo: '#FEF3C7',
   erro: '#B91C1C',

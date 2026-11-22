@@ -1,12 +1,21 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router/js-tabs';
-import { Text } from 'react-native';
+import type { ComponentProps } from 'react';
+import type { ColorValue } from 'react-native';
 
 import { useSincronizacaoAutomatica } from '../../hooks/useSyncQueue';
 import { cores } from '../../lib/constants';
 
-function icone(simbolo: string) {
-  return ({ focused }: { focused: boolean }) => (
-    <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{simbolo}</Text>
+type NomeDoIcone = ComponentProps<typeof Ionicons>['name'];
+
+// Aba ativa com o ícone cheio; as outras, só com o contorno.
+function icone(nome: string) {
+  return ({ focused, color }: { focused: boolean; color: ColorValue }) => (
+    <Ionicons
+      name={(focused ? nome : `${nome}-outline`) as NomeDoIcone}
+      size={28}
+      color={color as string}
+    />
   );
 }
 
@@ -21,15 +30,15 @@ export default function TabsLayout() {
         headerTitleStyle: { fontSize: 20 },
         tabBarActiveTintColor: cores.primariaEscura,
         tabBarInactiveTintColor: cores.textoSuave,
-        tabBarLabelStyle: { fontSize: 13, fontWeight: '600' },
-        tabBarStyle: { height: 68, paddingTop: 6 }
+        tabBarLabelStyle: { fontSize: 14, fontWeight: '700' },
+        tabBarStyle: { height: 72, paddingTop: 6, borderTopWidth: 1, borderTopColor: cores.borda }
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Início', tabBarIcon: icone('🏠') }} />
-      <Tabs.Screen name="diary" options={{ title: 'Diário', tabBarIcon: icone('📒') }} />
-      <Tabs.Screen name="assistant" options={{ title: 'Perguntar', tabBarIcon: icone('💬') }} />
-      <Tabs.Screen name="alerts" options={{ title: 'Alertas', tabBarIcon: icone('🔔') }} />
-      <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: icone('👤') }} />
+      <Tabs.Screen name="index" options={{ title: 'Início', tabBarIcon: icone('home') }} />
+      <Tabs.Screen name="diary" options={{ title: 'Diário', tabBarIcon: icone('book') }} />
+      <Tabs.Screen name="assistant" options={{ title: 'Perguntar', tabBarIcon: icone('chatbubbles') }} />
+      <Tabs.Screen name="alerts" options={{ title: 'Alertas', tabBarIcon: icone('notifications') }} />
+      <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: icone('person') }} />
     </Tabs>
   );
 }

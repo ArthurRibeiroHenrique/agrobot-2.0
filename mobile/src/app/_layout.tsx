@@ -1,12 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
+import { preventAutoHideAsync, hideAsync } from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
 
 import { useAuthListener } from '../hooks/useAuth';
 import { cores } from '../lib/constants';
 import { useAuthStore } from '../store/authStore';
+
+// A tela de abertura fica até a sessão salva ser lida: sem piscar a tela de login para quem já entrou.
+void preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const [queryClient] = useState(
@@ -21,13 +24,11 @@ export default function RootLayout() {
   const session = useAuthStore((state) => state.session);
   const carregando = useAuthStore((state) => state.carregando);
 
-  if (carregando) {
-    return (
-      <View style={styles.carregando}>
-        <ActivityIndicator size="large" color={cores.primaria} />
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (!carregando) void hideAsync().catch(() => {});
+  }, [carregando]);
+
+  if (carregando) return null;
 
   const logado = session !== null;
 
@@ -63,12 +64,3 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  carregando: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: cores.fundo
-  }
-});
