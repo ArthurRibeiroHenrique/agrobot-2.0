@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react';
 import type { ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAvisosDeCarencia } from '../../hooks/useAvisosDeCarencia';
 import { useSincronizacaoAutomatica } from '../../hooks/useSyncQueue';
 import { cores } from '../../lib/constants';
 
@@ -26,6 +27,8 @@ function icone(nome: string) {
 export default function TabsLayout() {
   // As abas ficam montadas em toda a área logada: daqui a fila offline é enviada sozinha.
   useSincronizacaoAutomatica();
+  // Daqui também saem os avisos de carência no celular e o número na aba Alertas.
+  const alertasPendentes = useAvisosDeCarencia();
 
   // Os botões do Android (voltar, início) ficam por cima da parte de baixo da tela. A barra cresce
   // a altura deles, que muda de celular para celular, para as abas nunca ficarem escondidas.
@@ -53,7 +56,12 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: 'Início', tabBarIcon: icone('home') }} />
       <Tabs.Screen name="diary" options={{ title: 'Diário', tabBarIcon: icone('book') }} />
       <Tabs.Screen name="assistant" options={{ title: 'Perguntar', tabBarIcon: icone('chatbubbles') }} />
-      <Tabs.Screen name="alerts" options={{ title: 'Alertas', tabBarIcon: icone('notifications') }} />
+      <Tabs.Screen name="alerts" options={{
+          title: 'Alertas',
+          tabBarIcon: icone('notifications'),
+          tabBarBadge: alertasPendentes > 0 ? alertasPendentes : undefined,
+          tabBarBadgeStyle: { backgroundColor: cores.erro, fontSize: 13, fontWeight: '700' }
+        }} />
       <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: icone('person') }} />
     </Tabs>
   );

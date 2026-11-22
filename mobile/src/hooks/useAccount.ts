@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { apiDelete } from '../services/api';
+import { limparAvisosDeCarencia } from '../services/avisosDeCarencia';
 import { limparFilaDoUsuario } from '../services/filaOffline';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../store/authStore';
@@ -17,6 +18,7 @@ export function useDeleteAccount() {
       await apiDelete('/account');
       // Gravações guardadas no aparelho também são dados da conta.
       if (userId) await limparFilaDoUsuario(userId);
+      await limparAvisosDeCarencia();
       queryClient.clear();
       await supabase.auth.signOut({ scope: 'local' });
     }

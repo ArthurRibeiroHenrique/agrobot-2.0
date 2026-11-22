@@ -19,6 +19,7 @@ export const cores = {
   alerta: '#B45309',
   alertaFundo: '#FEF3C7',
   erro: '#B91C1C',
+  erroFundo: '#FDECEC',
   gravando: '#C62828',
   branco: '#FFFFFF'
 };

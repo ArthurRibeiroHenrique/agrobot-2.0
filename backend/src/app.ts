@@ -14,6 +14,7 @@ import { farmsRouter } from './routes/farms.routes';
 import { assistantRouter } from './routes/assistant.routes';
 import { sharesRouter } from './routes/shares.routes';
 import { accountRouter } from './routes/account.routes';
+import { alertsRouter } from './routes/alerts.routes';
 
 export function createApp() {
   const app = express();
@@ -48,6 +49,7 @@ export function createApp() {
   v1.use('/', assistantRouter);
   v1.use('/', sharesRouter);
   v1.use('/', accountRouter);
+  v1.use('/', alertsRouter);
 
   app.use('/v1', v1);
 

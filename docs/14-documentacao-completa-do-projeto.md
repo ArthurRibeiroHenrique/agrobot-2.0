@@ -318,15 +318,18 @@ executadas **em ordem**:
 | `20261027…_varios_talhoes` | Vários rascunhos por gravação (`drafts`) e posição de cada registro (`draft_index`) |
 | `20261116…_compartilhamento` | Tabela `diary_shares` (diário compartilhado) e RLS de leitura para quem recebeu o acesso |
 | `20261116…_compartilhar_por_email` | Funções `user_id_by_email` e `user_emails`, só para o backend |
+| `20261122…_carencia` | Dias de carência na atividade, `withholding_memory` e `withholding_catalog` |
 
 | Tabela | Conteúdo |
 | --- | --- |
 | `voice_jobs` | Cada gravação: status, caminho do áudio, transcrição, intenção, rascunhos, resposta, erro, tentativas |
-| `activities` | Registros confirmados do diário: tipo, produto, quantidade, unidade, talhão, data, custo |
+| `activities` | Registros confirmados do diário: tipo, produto, quantidade, unidade, talhão, data, custo e dias de carência da bula |
 | `farms` | Propriedades: nome, cidade, estado |
 | `fields` | Talhões: propriedade, nome, cultura, área em hectares |
 | `assistant_messages` | Perguntas e respostas, com indicação de encaminhamento ao técnico |
 | `diary_shares` | Compartilhamento: `member_id` vê e edita os registros, propriedades e talhões de `owner_id` |
+| `withholding_memory` | Dias de carência que o produtor já informou, por produto e cultura, para sugerir de novo |
+| `withholding_catalog` | Catálogo de carência conferido por técnico, com a referência da bula (começa vazio) |
 
 Todas as tabelas têm **segurança por linha** (RLS): cada usuário só lê os próprios registros e os de
 quem compartilhou o diário com ele. A fila
@@ -356,7 +359,7 @@ Quem edita o registro de outra pessoa não vira dono dele: `user_id` continua se
 | `(tabs)/index` — **Início** | "O que você fez hoje?": botão de gravar e último registro |
 | `(tabs)/diary` — **Diário** | Lista das atividades confirmadas |
 | `(tabs)/assistant` — **Perguntar** | Perguntas ao assistente, por texto |
-| `(tabs)/alerts` — **Alertas** | Reservada para os alertas de carência (em construção) |
+| `(tabs)/alerts` — **Alertas** | Carência das aplicações: não pode colher, falta a bula, já pode colher; liga o aviso no celular |
 | `(tabs)/profile` — **Perfil** | Dados do usuário e saída |
 | `activity/new-voice` | Gravar e enviar o áudio, acompanhar o processamento |
 | `activity/confirm-draft` | Conferir, corrigir e confirmar os rascunhos; escolher entre anotar ou perguntar |
@@ -498,7 +501,7 @@ O perfil `production` gera o pacote para a Google Play. Passo a passo em
 | --- | --- |
 | 1. Base do backend | Feita |
 | 2. Fluxo de voz de ponta a ponta | Feita |
-| 3. Catálogo de produtos com dias de carência, cálculo e alertas | Assistente feito; carência e alertas pendentes |
+| 3. Catálogo de produtos com dias de carência, cálculo e alertas | Feita: carência pela bula, sugestão, alertas e aviso no celular; catálogo conferido criado, ainda vazio (ver docs/04) |
 | 4. Modo offline persistente | Feita para a gravação: fila guardada no aparelho e enviada sozinha quando a internet volta (ver docs/05) |
 | 5. Piloto com cinco produtores | Pendente |
 | 6. Módulo da cooperativa (painel, convites, consentimento LGPD) | Pendente |

@@ -16,7 +16,7 @@ import {
 } from '../../hooks/useActivities';
 import { useFields } from '../../hooks/useFarm';
 import { cores } from '../../lib/constants';
-import { lerData, lerNumero } from '../../lib/format';
+import { lerData, lerDiasDeCarencia, lerNumero } from '../../lib/format';
 import { mensagemDeErro } from '../../services/api';
 
 // Detalhes de um registro do diário: o produtor corrige os campos ou apaga o registro.
@@ -49,6 +49,13 @@ export default function EditActivityScreen() {
       return;
     }
 
+    const carencia = form.tipo === 'aplicacao' ? lerDiasDeCarencia(form.carencia) : null;
+
+    if (carencia === undefined) {
+      setErro('Confira a carência: um número de 0 a 365 dias, como está na bula.');
+      return;
+    }
+
     setErro(null);
 
     try {
@@ -60,7 +67,8 @@ export default function EditActivityScreen() {
         field_id: form.talhaoId,
         field_name: form.talhaoNome.trim() || null,
         occurred_at: data,
-        cost: lerNumero(form.custo)
+        cost: lerNumero(form.custo),
+        withholding_days: carencia
       });
 
       router.back();

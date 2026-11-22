@@ -28,6 +28,17 @@ const numericOrNull = z.preprocess((value) => {
   return Number.isNaN(parsed) ? null : parsed;
 }, z.number().nullable());
 
+// Dias de carência da bula: inteiro de 0 a 365, ou null quando o produtor não informou.
+const withholdingDaysOrNull = z.preprocess(
+  (value) => (value === '' || value === undefined ? null : value),
+  z.coerce
+    .number()
+    .int('A carência deve ser um número inteiro de dias')
+    .min(0, 'A carência não pode ser negativa')
+    .max(365, 'Confira a carência: a bula indica no máximo 365 dias')
+    .nullable()
+);
+
 export function isValidDateString(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
 
@@ -80,6 +91,7 @@ export const activityDraftSchema = z
     occurred_at: dateOrNull.optional(),
     cost: numericOrNull.optional(),
     currency: z.string().nullable().optional(),
+    withholding_days: withholdingDaysOrNull.optional(),
     confidence: z.coerce.number().min(0).max(1).optional(),
     missing_fields: z.array(z.string()).optional(),
     raw_transcript: z.string().optional()
@@ -103,7 +115,8 @@ export const activityUpdateSchema = z.object({
   field_id: z.string().uuid().nullable().optional(),
   field_name: textOrNull.optional(),
   occurred_at: dateOrNull.optional(),
-  cost: numericOrNull.optional()
+  cost: numericOrNull.optional(),
+  withholding_days: withholdingDaysOrNull.optional()
 });
 
 export type ActivityUpdate = z.infer<typeof activityUpdateSchema>;

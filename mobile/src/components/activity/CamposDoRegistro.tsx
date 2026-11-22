@@ -1,6 +1,7 @@
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { TIPOS_DE_ATIVIDADE } from '../../lib/constants';
+import { useSugestaoDeCarencia } from '../../hooks/useCarencia';
+import { cores, TIPOS_DE_ATIVIDADE } from '../../lib/constants';
 import { formatarData, formatarNumero } from '../../lib/format';
 import type { ActivityDraft, Field } from '../../types';
 import { Campo } from '../ui/Campo';
@@ -21,6 +22,8 @@ export type Formulario = {
   talhaoNome: string;
   data: string;
   custo: string;
+  // Dias de carência da bula, como texto do campo.
+  carencia: string;
 };
 
 export function paraFormulario(draft: Partial<ActivityDraft>, chave: number): Formulario {
@@ -34,7 +37,11 @@ export function paraFormulario(draft: Partial<ActivityDraft>, chave: number): Fo
     talhaoId: draft.field_id ?? null,
     talhaoNome: draft.field_name ?? '',
     data: draft.occurred_at ? formatarData(draft.occurred_at) : '',
-    custo: formatarNumero(draft.cost)
+    custo: formatarNumero(draft.cost),
+    carencia:
+      draft.withholding_days === null || draft.withholding_days === undefined
+        ? ''
+        : String(draft.withholding_days)
   };
 }
 
@@ -46,6 +53,12 @@ type CamposProps = {
 
 export function CamposDoRegistro({ form, talhoes, onChange }: CamposProps) {
   const faltando = new Set(form.rascunho.missing_fields ?? []);
+  const aplicacao = form.tipo === 'aplicacao';
+  const sugestao = useSugestaoDeCarencia(
+    form.produto,
+    form.talhaoId,
+    aplicacao && form.carencia.trim() === ''
+  ).data;
 
   const opcoesDeTalhao = [
     ...talhoes.map((talhao) => ({ valor: talhao.id, rotulo: talhao.name })),
@@ -123,6 +136,38 @@ export function CamposDoRegistro({ form, talhoes, onChange }: CamposProps) {
         placeholder="dd/mm/aaaa"
       />
 
+      {aplicacao ? (
+        <View style={styles.carencia}>
+          <Campo
+            rotulo="Carência da bula (dias)"
+            value={form.carencia}
+            onChangeText={(carencia) => onChange({ carencia: carencia.replace(/\D/g, '') })}
+            keyboardType="number-pad"
+            maxLength={3}
+            placeholder="Ex.: 30"
+          />
+          <Text style={styles.dica}>
+            Está na bula como “intervalo de segurança”, para a cultura deste talhão. O AgroBot
+            avisa o dia em que você pode colher.
+          </Text>
+          {sugestao && form.carencia.trim() === '' ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Usar ${sugestao.dias} dias de carência`}
+              onPress={() => onChange({ carencia: String(sugestao.dias) })}
+              style={({ pressed }) => [styles.sugestao, pressed && styles.pressionado]}
+            >
+              <Text style={styles.sugestaoTitulo}>Usar {sugestao.dias} dias</Text>
+              <Text style={styles.sugestaoTexto}>
+                {sugestao.origem === 'bula_anterior'
+                  ? 'Foi o que você informou da última vez para este produto nesta cultura. Confira se a bula é a mesma.'
+                  : `Catálogo conferido: ${sugestao.referencia ?? 'bula do produto'}. Confira na sua bula.`}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+
       <Campo
         rotulo="Custo em reais (se houver)"
         value={form.custo}
@@ -135,6 +180,37 @@ export function CamposDoRegistro({ form, talhoes, onChange }: CamposProps) {
 }
 
 const styles = StyleSheet.create({
+  carencia: {
+    marginBottom: 16
+  },
+  dica: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: cores.textoSuave,
+    marginTop: -8
+  },
+  sugestao: {
+    marginTop: 10,
+    backgroundColor: cores.destaque,
+    borderWidth: 2,
+    borderColor: cores.primaria,
+    borderRadius: 12,
+    padding: 12
+  },
+  pressionado: {
+    opacity: 0.8
+  },
+  sugestaoTitulo: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: cores.primariaEscura,
+    marginBottom: 2
+  },
+  sugestaoTexto: {
+    fontSize: 16,
+    lineHeight: 22,
+    color: cores.texto
+  },
   linha: {
     flexDirection: 'row',
     gap: 12

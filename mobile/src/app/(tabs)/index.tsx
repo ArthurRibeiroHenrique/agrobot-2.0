@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { ResumoDaCarencia } from '../../components/alerts/ResumoDaCarencia';
 import { FilaDeGravacoes } from '../../components/cards/FilaDeGravacoes';
 import { UltimoRegistroCard } from '../../components/cards/UltimoRegistroCard';
 import { BotaoGrande } from '../../components/ui/BotaoGrande';
@@ -26,6 +27,8 @@ export default function HomeScreen() {
       />
 
       <View style={styles.espaco} />
+
+      <ResumoDaCarencia />
 
       <FilaDeGravacoes />
 
