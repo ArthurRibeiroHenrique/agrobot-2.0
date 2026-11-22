@@ -15,6 +15,7 @@ export const cores = {
   texto: '#142016',
   textoSuave: '#3D4B3F',
   borda: '#AEBCAB',
+  destaque: '#DCEDD8',
   alerta: '#B45309',
   alertaFundo: '#FEF3C7',
   erro: '#B91C1C',

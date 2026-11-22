@@ -2,11 +2,15 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router/js-tabs';
 import type { ComponentProps } from 'react';
 import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSincronizacaoAutomatica } from '../../hooks/useSyncQueue';
 import { cores } from '../../lib/constants';
 
 type NomeDoIcone = ComponentProps<typeof Ionicons>['name'];
+
+// Altura da área de toque de cada aba, fora o espaço dos botões do sistema.
+const ALTURA_DAS_ABAS = 68;
 
 // Aba ativa com o ícone cheio; as outras, só com o contorno.
 function icone(nome: string) {
@@ -23,6 +27,10 @@ export default function TabsLayout() {
   // As abas ficam montadas em toda a área logada: daqui a fila offline é enviada sozinha.
   useSincronizacaoAutomatica();
 
+  // Os botões do Android (voltar, início) ficam por cima da parte de baixo da tela. A barra cresce
+  // a altura deles, que muda de celular para celular, para as abas nunca ficarem escondidas.
+  const { bottom } = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -31,7 +39,15 @@ export default function TabsLayout() {
         tabBarActiveTintColor: cores.primariaEscura,
         tabBarInactiveTintColor: cores.textoSuave,
         tabBarLabelStyle: { fontSize: 14, fontWeight: '700' },
-        tabBarStyle: { height: 72, paddingTop: 6, borderTopWidth: 1, borderTopColor: cores.borda }
+        // Fundo na aba atual: fica claro onde a pessoa está, sem depender só da cor do ícone.
+        tabBarActiveBackgroundColor: cores.destaque,
+        tabBarItemStyle: { borderRadius: 12, marginHorizontal: 2, marginVertical: 4 },
+        tabBarStyle: {
+          height: ALTURA_DAS_ABAS + bottom,
+          paddingBottom: bottom,
+          borderTopWidth: 1,
+          borderTopColor: cores.borda
+        }
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Início', tabBarIcon: icone('home') }} />
