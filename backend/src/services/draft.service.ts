@@ -151,6 +151,16 @@ export function todayInTimezone(
   }
 }
 
+// Data de referência para "hoje" na fala: o momento da gravação, quando o aplicativo informa
+// (fila offline). Data inválida ou no futuro (relógio do celular adiantado) cai no momento atual.
+export function recordingDate(recordedAt: unknown, now = new Date()): Date {
+  if (typeof recordedAt !== 'string') return now;
+
+  const date = new Date(recordedAt);
+
+  return Number.isNaN(date.getTime()) || date > now ? now : date;
+}
+
 export function emptyDraft(transcript: string, today: string): ActivityDraft {
   return {
     activity_type: 'outro',

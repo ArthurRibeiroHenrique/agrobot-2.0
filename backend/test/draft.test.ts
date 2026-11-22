@@ -7,6 +7,7 @@ import {
   buildDrafts,
   matchField,
   normalizeUnit,
+  recordingDate,
   todayInTimezone
 } from '../src/services/draft.service';
 
@@ -92,6 +93,22 @@ describe('todayInTimezone', () => {
 
     expect(todayInTimezone('Fuso/Inexistente', now)).toBe('2026-10-06');
     expect(todayInTimezone(null, now)).toBe('2026-10-06');
+  });
+});
+
+describe('recordingDate', () => {
+  const now = new Date('2026-10-07T12:00:00Z');
+
+  it('usa o momento da gravação enviado pelo aplicativo', () => {
+    expect(recordingDate('2026-10-05T18:00:00-03:00', now).toISOString()).toBe(
+      '2026-10-05T21:00:00.000Z'
+    );
+  });
+
+  it('cai no momento atual sem data, com data inválida ou no futuro', () => {
+    expect(recordingDate(undefined, now)).toBe(now);
+    expect(recordingDate('ontem', now)).toBe(now);
+    expect(recordingDate('2026-10-09T10:00:00Z', now)).toBe(now);
   });
 });
 

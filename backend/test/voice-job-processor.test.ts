@@ -93,6 +93,33 @@ beforeEach(() => {
   mocks.removeAudio.mockResolvedValue(undefined);
 });
 
+describe('processVoiceJob com gravação da fila offline', () => {
+  it('resolve "hoje" pelo dia da gravação, não pelo dia do envio', async () => {
+    mocks.findVoiceJobById.mockResolvedValue({
+      id: JOB_ID,
+      user_id: USER_ID,
+      status: 'queued',
+      audio_path: `${USER_ID}/a.m4a`,
+      attempts: 0,
+      metadata: {
+        timezone: 'America/Sao_Paulo',
+        recorded_at: '2026-10-20T17:00:00-03:00'
+      }
+    });
+    mocks.extractActivityFromTranscript.mockResolvedValue(
+      extraction({ activities: [{ ...APLICACAO, occurred_at: null }] })
+    );
+
+    await processVoiceJob(JOB_ID, { isLastAttempt: false });
+
+    expect(mocks.extractActivityFromTranscript).toHaveBeenCalledWith(
+      'fala do produtor',
+      expect.objectContaining({ today: '2026-10-20' })
+    );
+    expect(finalUpdate().draft.occurred_at).toBe('2026-10-20');
+  });
+});
+
 describe('processVoiceJob por intenção', () => {
   it('registro: monta o rascunho sem chamar o assistente', async () => {
     mocks.extractActivityFromTranscript.mockResolvedValue(extraction());
