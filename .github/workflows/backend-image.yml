@@ -1,10 +1,11 @@
 # Monta a imagem do backend e guarda no GitHub Container Registry (gratuito para repositório público).
 # O Azure Container Apps baixa a imagem de lá; assim não é preciso pagar um registro no Azure.
+# Na master, depois da imagem, o backend no Azure passa a usar a versão nova.
 name: Imagem do backend
 
 on:
   push:
-    branches: [master, feat/azure-deploy]
+    branches: [master]
     paths:
       - 'backend/**'
       - '.github/workflows/backend-image.yml'
@@ -57,3 +58,36 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  publicar:
+    needs: imagem
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    # Uma publicação por vez: se dois pushes chegarem juntos, o segundo espera o primeiro.
+    concurrency: publicar-backend
+    permissions:
+      id-token: write
+    steps:
+      # Login sem senha (OIDC): o Azure só aceita o token da master deste repositório, e a
+      # identidade agrobot-github-deploy só pode mexer no Container App agrobot-api.
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Backend na imagem nova
+        run: |
+          az extension add -n containerapp --upgrade -y --only-show-errors
+          az containerapp update -n agrobot-api -g Agrobot             --image "ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/agrobot-backend:sha-${GITHUB_SHA}"             --query properties.latestRevisionName -o tsv
+
+      - name: Conferir se está no ar
+        run: |
+          url=$(az containerapp show -n agrobot-api -g Agrobot --query properties.configuration.ingress.fqdn -o tsv)
+          # Escala a zero: a primeira chamada acorda o backend, por isso as tentativas.
+          for tentativa in 1 2 3 4 5 6; do
+            if curl -fsS --max-time 30 "https://$url/health"; then exit 0; fi
+            sleep 10
+          done
+          echo "O backend não respondeu ao /health depois da publicação." >&2
+          exit 1
