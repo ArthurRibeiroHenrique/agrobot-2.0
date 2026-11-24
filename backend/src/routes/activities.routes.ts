@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { asyncHandler } from '../utils/async-handler';
 import { getUserId } from '../middlewares/auth';
-import { activityUpdateSchema } from '../schemas/activity.schema';
+import { ACTIVITY_TYPES, activityUpdateSchema } from '../schemas/activity.schema';
 import { HttpError } from '../utils/http-error';
 import {
   deleteActivity,
@@ -13,6 +13,11 @@ import {
 } from '../services/voice-job.service';
 
 export const activitiesRouter = Router();
+
+// Filtro do diário por assunto (tipo de atividade). Sem filtro, vem tudo.
+const listQuerySchema = z.object({
+  type: z.enum(ACTIVITY_TYPES).optional()
+});
 
 function activityId(id: string): string {
   if (!z.string().uuid().safeParse(id).success) {
@@ -25,7 +30,8 @@ function activityId(id: string): string {
 activitiesRouter.get(
   '/activities',
   asyncHandler(async (req, res) => {
-    const activities = await listActivities(getUserId(req));
+    const { type } = listQuerySchema.parse(req.query);
+    const activities = await listActivities(getUserId(req), type);
 
     res.json(activities);
   })

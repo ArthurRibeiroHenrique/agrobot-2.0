@@ -117,7 +117,23 @@ describe('autenticação', () => {
     const res = await request(app).get('/v1/activities').set(auth);
 
     expect(res.status).toBe(200);
-    expect(mocks.listActivities).toHaveBeenCalledWith(USER_ID);
+    expect(mocks.listActivities).toHaveBeenCalledWith(USER_ID, undefined);
+  });
+
+  it('filtra o diário por assunto', async () => {
+    mocks.listActivities.mockResolvedValue([]);
+
+    const res = await request(app).get('/v1/activities?type=aplicacao').set(auth);
+
+    expect(res.status).toBe(200);
+    expect(mocks.listActivities).toHaveBeenCalledWith(USER_ID, 'aplicacao');
+  });
+
+  it('recusa assunto que não existe', async () => {
+    const res = await request(app).get('/v1/activities?type=qualquer').set(auth);
+
+    expect(res.status).toBe(400);
+    expect(mocks.listActivities).not.toHaveBeenCalled();
   });
 });
 
