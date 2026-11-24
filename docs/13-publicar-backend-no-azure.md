@@ -132,9 +132,16 @@ Criado pela API de Consumo do Azure (`Microsoft.Consumption/budgets`), ou pelo p
 
 ## Publicar uma versão nova
 
-1. Faça o merge na `master` e envie para o GitHub
-2. Espere o workflow **Imagem do backend** terminar, na aba Actions do GitHub
-3. Aponte o backend para a imagem nova, pela tag do commit:
+É automático: um push na `master` que mexa em `backend/` dispara o workflow **Imagem do backend**,
+que roda os testes, monta a imagem e aponta o `agrobot-api` para ela pela tag do commit
+(`sha-COMMIT_COMPLETO`). No fim, o workflow chama o `/health` e falha se o backend não responder.
+
+O login no Azure é por OIDC, sem senha guardada no GitHub. A identidade `agrobot-github-deploy`
+(registro de aplicativo no Entra ID) tem o papel Contributor só no Container App `agrobot-api`, e a
+credencial federada só aceita o token da branch `master` deste repositório. Os segredos do
+repositório `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` e `AZURE_SUBSCRIPTION_ID` guardam só os IDs.
+
+Para publicar ou voltar a uma versão à mão (por exemplo, desfazer uma publicação com problema):
 
 ```
 az containerapp update -n agrobot-api -g Agrobot --image ghcr.io/arthurribeirohenrique/agrobot-backend:sha-COMMIT_COMPLETO
