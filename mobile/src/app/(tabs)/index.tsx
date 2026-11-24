@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { ResumoDaCarencia } from '../../components/alerts/ResumoDaCarencia';
 import { FilaDeGravacoes } from '../../components/cards/FilaDeGravacoes';
 import { UltimoRegistroCard } from '../../components/cards/UltimoRegistroCard';
+import { ResumoNaInicio } from '../../components/resumo/ResumoNaInicio';
 import { BotaoGrande } from '../../components/ui/BotaoGrande';
 import { Erro, Paragrafo, Tela, Titulo } from '../../components/ui/Tela';
 import { useActivities } from '../../hooks/useActivities';
@@ -31,6 +32,8 @@ export default function HomeScreen() {
       <ResumoDaCarencia />
 
       <FilaDeGravacoes />
+
+      <ResumoNaInicio />
 
       {erro ? <Erro>{mensagemDeErro(erro)}</Erro> : null}
       {!carregando && !erro ? (

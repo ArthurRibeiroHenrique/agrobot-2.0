@@ -70,8 +70,26 @@ export function rotuloDoTipo(tipo: string | null | undefined): string {
   );
 }
 
+export function iconeDoTipo(tipo: string | null | undefined): string {
+  return (
+    TIPOS_DE_ATIVIDADE.find((item) => item.valor === tipo)?.icone ?? 'ellipsis-horizontal-circle'
+  );
+}
+
 export function formatarDinheiro(valor: number | null | undefined): string {
   if (valor === null || valor === undefined) return '';
 
   return `R$ ${valor.toFixed(2).replace('.', ',')}`;
+}
+
+// Dinheiro sem centavos e com ponto de milhar, para os números grandes do resumo: R$ 12.350
+export function formatarDinheiroRedondo(valor: number): string {
+  const inteiro = String(Math.round(valor)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  return `R$ ${inteiro}`;
+}
+
+// 1 registro, 2 registros.
+export function plural(quantidade: number, singular: string, plural: string): string {
+  return `${quantidade} ${quantidade === 1 ? singular : plural}`;
 }
