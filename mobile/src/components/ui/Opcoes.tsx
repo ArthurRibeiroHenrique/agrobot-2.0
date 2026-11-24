@@ -9,7 +9,7 @@ type Opcao = {
 
 type Props = {
   rotulo: string;
-  opcoes: Opcao[];
+  opcoes: readonly Opcao[];
   valor: string | null;
   onChange: (valor: string) => void;
   faltando?: boolean;

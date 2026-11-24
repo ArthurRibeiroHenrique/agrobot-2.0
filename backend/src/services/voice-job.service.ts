@@ -222,13 +222,14 @@ async function guardarCarenciaInformada(
 }
 
 // Registros do usuário e de quem compartilhou o diário com ele.
-export async function listActivities(userId: string) {
+export async function listActivities(userId: string, activityType?: string) {
   const owners = await accessibleUserIds(userId);
 
-  const { data, error } = await supabaseAdmin
-    .from('activities')
-    .select('*')
-    .in('user_id', owners)
+  let query = supabaseAdmin.from('activities').select('*').in('user_id', owners);
+
+  if (activityType) query = query.eq('activity_type', activityType);
+
+  const { data, error } = await query
     .order('occurred_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(100);

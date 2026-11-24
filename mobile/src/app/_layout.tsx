@@ -59,6 +59,7 @@ export default function RootLayout() {
           <Stack.Screen name="coop/dashboard" options={{ title: 'Cooperativa' }} />
           <Stack.Screen name="share/index" options={{ title: 'Compartilhar diário' }} />
           <Stack.Screen name="settings/index" options={{ title: 'Configurações' }} />
+          <Stack.Screen name="resumo" options={{ title: 'Resumo da sua roça' }} />
         </Stack.Protected>
       </Stack>
     </QueryClientProvider>

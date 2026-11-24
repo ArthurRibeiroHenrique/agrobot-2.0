@@ -15,6 +15,7 @@ import { assistantRouter } from './routes/assistant.routes';
 import { sharesRouter } from './routes/shares.routes';
 import { accountRouter } from './routes/account.routes';
 import { alertsRouter } from './routes/alerts.routes';
+import { resumoRouter } from './routes/resumo.routes';
 
 export function createApp() {
   const app = express();
@@ -50,6 +51,7 @@ export function createApp() {
   v1.use('/', sharesRouter);
   v1.use('/', accountRouter);
   v1.use('/', alertsRouter);
+  v1.use('/', resumoRouter);
 
   app.use('/v1', v1);
 

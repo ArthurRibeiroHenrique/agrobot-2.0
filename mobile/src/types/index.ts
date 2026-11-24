@@ -125,3 +125,20 @@ export type SugestaoDeCarencia = {
   origem: 'bula_anterior' | 'catalogo';
   referencia: string | null;
 };
+
+// Resumo de todo o diário, desde o primeiro registro (GET /v1/summary).
+export type Resumo = {
+  total: number;
+  primeiro_registro: string | null;
+  ultimo_registro: string | null;
+  este_mes: number;
+  por_tipo: { tipo: string; quantidade: number }[];
+  produtos: {
+    produto: string;
+    tipo: string;
+    vezes: number;
+    totais: { quantidade: number; unidade: string | null }[];
+  }[];
+  talhoes: { talhao: string; quantidade: number }[];
+  gastos: { total: number; este_mes: number };
+};

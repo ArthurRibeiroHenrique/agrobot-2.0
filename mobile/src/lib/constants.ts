@@ -24,16 +24,17 @@ export const cores = {
   branco: '#FFFFFF'
 };
 
+// Ícone de cada assunto (Ionicons): ajuda quem lê pouco a achar o assunto pelo desenho.
 export const TIPOS_DE_ATIVIDADE = [
-  { valor: 'plantio', rotulo: 'Plantio' },
-  { valor: 'aplicacao', rotulo: 'Aplicação' },
-  { valor: 'adubacao', rotulo: 'Adubação' },
-  { valor: 'irrigacao', rotulo: 'Irrigação' },
-  { valor: 'colheita', rotulo: 'Colheita' },
-  { valor: 'manejo', rotulo: 'Manejo' },
-  { valor: 'custo', rotulo: 'Custo' },
-  { valor: 'outro', rotulo: 'Outro' }
-];
+  { valor: 'plantio', rotulo: 'Plantio', icone: 'leaf' },
+  { valor: 'aplicacao', rotulo: 'Aplicação', icone: 'flask' },
+  { valor: 'adubacao', rotulo: 'Adubação', icone: 'nutrition' },
+  { valor: 'irrigacao', rotulo: 'Irrigação', icone: 'water' },
+  { valor: 'colheita', rotulo: 'Colheita', icone: 'basket' },
+  { valor: 'manejo', rotulo: 'Manejo', icone: 'construct' },
+  { valor: 'custo', rotulo: 'Custo', icone: 'cash' },
+  { valor: 'outro', rotulo: 'Outro', icone: 'ellipsis-horizontal-circle' }
+] as const;
 
 // Página pública da política de privacidade (GitHub Pages, pasta site/ do repositório).
 export const POLITICA_DE_PRIVACIDADE_URL =
