@@ -141,6 +141,12 @@ O login no Azure é por OIDC, sem senha guardada no GitHub. A identidade `agrobo
 credencial federada só aceita o token da branch `master` deste repositório. Os segredos do
 repositório `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` e `AZURE_SUBSCRIPTION_ID` guardam só os IDs.
 
+O assunto da credencial federada (`github-master`) segue o formato que o GitHub manda hoje, com os
+IDs numéricos da conta e do repositório:
+`repo:ArthurRibeiroHenrique@174554044/agrobot-2.0@1406498812:ref:refs/heads/master`. Se o login
+falhar com `AADSTS700213`, o erro mostra o assunto que chegou; basta copiá-lo para a credencial
+(`az ad app federated-credential update`).
+
 Para publicar ou voltar a uma versão à mão (por exemplo, desfazer uma publicação com problema):
 
 ```
