@@ -26,7 +26,7 @@ const DURACAO_MAXIMA_MS = 2 * 60 * 1000;
 
 export default function NewVoiceScreen() {
   const router = useRouter();
-  const { gravando, duracaoMs, iniciar, parar } = useVoiceRecording();
+  const { gravando, duracaoMs, iniciar, parar, ouviuVoz } = useVoiceRecording();
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   // Sem sinal: a gravação ficou guardada na fila e vai sozinha quando a internet voltar.
@@ -102,6 +102,14 @@ export default function NewVoiceScreen() {
 
       if (!uri || duracao < DURACAO_MINIMA_MS) {
         setErro('A gravação ficou muito curta. Toque e fale de novo.');
+        return;
+      }
+
+      // Gravação em silêncio: a transcrição inventaria uma fala que ninguém disse.
+      if (!ouviuVoz()) {
+        setErro(
+          'Não ouvi nenhuma voz na gravação. Fale mais perto do celular e tente de novo. Se o microfone estiver coberto (capinha, mão), descubra antes.'
+        );
         return;
       }
 

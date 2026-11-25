@@ -4,7 +4,11 @@ import { z } from 'zod';
 
 import { asyncHandler } from '../utils/async-handler';
 import { HttpError } from '../utils/http-error';
-import { normalizeAudioExtension } from '../utils/audio-format';
+import {
+  audioContentType,
+  looksLikeAudio,
+  normalizeAudioExtension
+} from '../utils/audio-format';
 import { getUserId } from '../middlewares/auth';
 import { MAX_ACTIVITIES_PER_VOICE_JOB } from '../schemas/activity.schema';
 import { enqueueVoiceJob } from '../jobs/queue';
@@ -35,7 +39,7 @@ const confirmVoiceJobSchema = z.preprocess(
   },
   z.object({
     activities: z
-      .array(z.record(z.unknown()))
+      .array(z.record(z.string(), z.unknown()))
       .min(1, 'Envie ao menos um registro')
       .max(MAX_ACTIVITIES_PER_VOICE_JOB)
   })
@@ -72,7 +76,7 @@ voiceRouter.post(
       throw new HttpError(400, 'Arquivo de áudio é obrigatório');
     }
 
-    if (!normalizeAudioExtension(req.file.originalname)) {
+    if (!normalizeAudioExtension(req.file.originalname) || !looksLikeAudio(req.file.buffer)) {
       throw new HttpError(
         400,
         'Formato de áudio não aceito. Use MP3, M4A, WAV, OGG, OPUS, WEBM ou FLAC.'
@@ -93,8 +97,7 @@ voiceRouter.post(
     const audioPath = await uploadAudio({
       userId,
       buffer: req.file.buffer,
-      originalName: req.file.originalname,
-      mimeType: req.file.mimetype
+      originalName: req.file.originalname
     });
 
     const { job, duplicated, error } = await createVoiceJob({
@@ -107,7 +110,7 @@ voiceRouter.post(
         timezone: body.timezone ?? null,
         recorded_at: body.recorded_at ?? null,
         original_name: req.file.originalname,
-        mime_type: req.file.mimetype
+        mime_type: audioContentType(normalizeAudioExtension(req.file.originalname) ?? '.m4a')
       }
     });
 
