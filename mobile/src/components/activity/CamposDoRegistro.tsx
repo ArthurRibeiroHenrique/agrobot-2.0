@@ -22,6 +22,7 @@ export type Formulario = {
   talhaoNome: string;
   data: string;
   custo: string;
+  cultura: string;
   // Dias de carência da bula, como texto do campo.
   carencia: string;
 };
@@ -38,6 +39,7 @@ export function paraFormulario(draft: Partial<ActivityDraft>, chave: number): Fo
     talhaoNome: draft.field_name ?? '',
     data: draft.occurred_at ? formatarData(draft.occurred_at) : '',
     custo: formatarNumero(draft.cost),
+    cultura: draft.crop ?? '',
     carencia:
       draft.withholding_days === null || draft.withholding_days === undefined
         ? ''
@@ -114,7 +116,9 @@ export function CamposDoRegistro({ form, talhoes, onChange }: CamposProps) {
 
             onChange({
               talhaoId: talhao?.id ?? null,
-              talhaoNome: talhao?.name ?? ''
+              talhaoNome: talhao?.name ?? '',
+              // Cultura em branco: usa a do talhão escolhido.
+              ...(form.cultura.trim() === '' && talhao?.crop ? { cultura: talhao.crop } : {})
             });
           }}
           faltando={faltando.has('field_name') || faltando.has('field_id')}
@@ -127,6 +131,13 @@ export function CamposDoRegistro({ form, talhoes, onChange }: CamposProps) {
           faltando={faltando.has('field_name')}
         />
       )}
+
+      <Campo
+        rotulo="Cultura ou criação"
+        value={form.cultura}
+        onChangeText={(cultura) => onChange({ cultura })}
+        placeholder="milho, soja, feijão, gado…"
+      />
 
       <Campo
         rotulo="Data"

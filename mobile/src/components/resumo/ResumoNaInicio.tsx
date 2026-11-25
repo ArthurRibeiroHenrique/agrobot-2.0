@@ -1,12 +1,26 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
+import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useResumo } from '../../hooks/useActivities';
 import { cores } from '../../lib/constants';
-import { formatarData, formatarDinheiroRedondo } from '../../lib/format';
+import {
+  formatarData,
+  formatarDinheiroRedondo,
+  iconeDoTipo,
+  plural,
+  rotuloDoTipo
+} from '../../lib/format';
+import { LinhaComBarra } from './LinhaComBarra';
 
-// Na tela inicial: três números grandes sobre todo o diário e o caminho para o resumo completo.
+type NomeDoIcone = ComponentProps<typeof Ionicons>['name'];
+
+// Quantos serviços aparecem em barras na tela inicial; o resto fica no resumo completo.
+const SERVICOS_NA_INICIO = 3;
+
+// No topo da tela inicial: três números grandes sobre todo o diário, as barras dos serviços mais
+// feitos e o caminho para o resumo completo.
 export function ResumoNaInicio() {
   const router = useRouter();
   const { data: resumo } = useResumo();
@@ -22,6 +36,9 @@ export function ResumoNaInicio() {
   if (resumo.gastos.total > 0) {
     numeros.push({ valor: formatarDinheiroRedondo(resumo.gastos.total), legenda: 'de gastos\nanotados' });
   }
+
+  const servicos = resumo.por_tipo.slice(0, SERVICOS_NA_INICIO);
+  const maiorServico = Math.max(1, ...servicos.map((item) => item.quantidade));
 
   const desde = resumo.primeiro_registro ? `Desde ${formatarData(resumo.primeiro_registro)}` : '';
 
@@ -50,6 +67,21 @@ export function ResumoNaInicio() {
           </View>
         ))}
       </View>
+
+      {servicos.length > 0 ? (
+        <View style={styles.servicos}>
+          <Text style={styles.subtitulo}>O que você mais fez</Text>
+          {servicos.map((item) => (
+            <LinhaComBarra
+              key={item.tipo}
+              icone={iconeDoTipo(item.tipo) as NomeDoIcone}
+              rotulo={rotuloDoTipo(item.tipo)}
+              valor={plural(item.quantidade, 'vez', 'vezes')}
+              proporcao={item.quantidade / maiorServico}
+            />
+          ))}
+        </View>
+      ) : null}
 
       <Text style={styles.link}>Ver o resumo completo ›</Text>
     </Pressable>
@@ -108,6 +140,15 @@ const styles = StyleSheet.create({
     color: cores.texto,
     textAlign: 'center',
     marginTop: 2
+  },
+  servicos: {
+    marginBottom: 12
+  },
+  subtitulo: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: cores.texto,
+    marginBottom: 2
   },
   link: {
     fontSize: 18,

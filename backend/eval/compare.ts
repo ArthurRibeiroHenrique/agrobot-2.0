@@ -3,6 +3,7 @@ import { normalizeText, normalizeUnit } from '../src/services/draft.service';
 // Campos essenciais da hipótese 2: o que foi feito, com o quê, quanto, onde e quando.
 // intent: se a fala era registro, pergunta, os dois ou incerta.
 // activity_count: quantos registros a fala gerou (ex.: um por talhão citado).
+// cost: custo em reais, inclusive o calculado pelo preço por unidade. crop: cultura do registro.
 export const EVAL_FIELDS = [
   'intent',
   'activity_count',
@@ -11,7 +12,9 @@ export const EVAL_FIELDS = [
   'quantity',
   'unit',
   'field_name',
-  'occurred_at'
+  'occurred_at',
+  'cost',
+  'crop'
 ] as const;
 
 export type EvalField = (typeof EVAL_FIELDS)[number];
@@ -34,7 +37,7 @@ function sameValue(
     return expected === actual;
   }
 
-  if (field === 'quantity' || field === 'activity_count') {
+  if (field === 'quantity' || field === 'activity_count' || field === 'cost') {
     return Math.abs(Number(expected) - Number(actual)) < 0.001;
   }
 

@@ -29,6 +29,9 @@ function activity(overrides: Partial<ExtractedActivity> = {}): ExtractedActivity
     occurred_at: '2026-10-06',
     cost: null,
     currency: null,
+    unit_price: null,
+    price_unit: null,
+    crop: null,
     ...overrides
   };
 }
@@ -193,6 +196,55 @@ describe('buildDraft', () => {
       'produto biológico Trichoderma'
     );
     expect(draftFor({ product: 'fungicida' }).product).toBe('fungicida');
+  });
+});
+
+describe('buildDraft: custo pelo preço por unidade', () => {
+  it('a 100 reais o litro, 1,2 L: custo de R$ 120 em reais', () => {
+    const draft = draftFor({ quantity: 1.2, unit: 'litro', unit_price: 100, price_unit: 'litro' });
+
+    expect(draft.cost).toBe(120);
+    expect(draft.currency).toBe('BRL');
+  });
+
+  it('a 400 reais o litro, 250 mL: R$ 100', () => {
+    expect(draftFor({ quantity: 250, unit: 'ml', unit_price: 400, price_unit: 'L' }).cost).toBe(100);
+  });
+
+  it('total dito na fala vale mais que a conta', () => {
+    expect(draftFor({ cost: 300, unit_price: 100, price_unit: 'L' }).cost).toBe(300);
+  });
+
+  it('sem preço nem total, o custo fica vazio', () => {
+    const draft = draftFor();
+
+    expect(draft.cost).toBeNull();
+    expect(draft.currency).toBeNull();
+  });
+});
+
+describe('buildDraft: cultura e textos vazios', () => {
+  it('cultura dita na fala vale mais que a do talhão', () => {
+    expect(draftFor({ crop: 'Feijão' }).crop).toBe('feijão');
+  });
+
+  it('sem cultura na fala, usa a do talhão cadastrado', () => {
+    expect(draftFor().crop).toBe('milho');
+    expect(draftFor({ field_name: 'baixada' }).crop).toBeNull();
+  });
+
+  it('plantio sem produto usa a cultura dita; aplicação não', () => {
+    expect(draftFor({ activity_type: 'plantio', product: null, crop: 'feijão' }).product).toBe('feijão');
+    expect(draftFor({ activity_type: 'aplicacao', product: null, crop: 'feijão' }).product).toBeNull();
+  });
+
+  it('"/null" e "null" da IA viram vazio', () => {
+    const draft = draftFor({ field_name: '/null', product: 'null', unit: 'null', crop: 'null' });
+
+    expect(draft.field_name).toBeNull();
+    expect(draft.product).toBeNull();
+    expect(draft.unit).toBeNull();
+    expect(draft.crop).toBeNull();
   });
 });
 

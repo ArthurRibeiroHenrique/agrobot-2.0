@@ -176,6 +176,7 @@ export async function confirmVoiceJob(
         occurred_at: draft.occurred_at,
         cost: draft.cost,
         currency: draft.currency,
+        crop: draft.crop ?? null,
         // Carência só faz sentido em aplicação de defensivo.
         withholding_days:
           draft.activity_type === 'aplicacao' ? (draft.withholding_days ?? null) : null,
