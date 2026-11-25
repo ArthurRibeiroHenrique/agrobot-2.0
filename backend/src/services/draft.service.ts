@@ -5,6 +5,7 @@ import {
   Extraction,
   isValidDateString
 } from '../schemas/activity.schema';
+import { custoPeloPreco } from '../rules/custo';
 import { FieldRef } from './farm.service';
 
 const UNIT_ALIASES: Record<string, string> = {
@@ -63,11 +64,24 @@ export function normalizeText(value: string): string {
 }
 
 export function normalizeUnit(unit: string | null): string | null {
+  unit = cleanText(unit);
+
   if (!unit) return null;
 
   const key = normalizeText(unit).replace(/\s+/g, '');
 
   return UNIT_ALIASES[key] ?? unit.trim();
+}
+
+// A IA às vezes escreve o vazio como texto ("null", "/null", "não informado").
+const EMPTY_TEXTS = new Set(['null', 'undefined', 'none', 'nenhum', 'nenhuma', 'nao informado', 'n a']);
+
+export function cleanText(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+
+  if (!trimmed || EMPTY_TEXTS.has(normalizeText(trimmed))) return null;
+
+  return trimmed;
 }
 
 // Palavras que não dizem qual foi o insumo: o produto fica em falta para o produtor preencher.
@@ -83,7 +97,7 @@ const VAGUE_PRODUCTS = new Set([
 const ARTICLES = new Set(['um', 'uma', 'o', 'a', 'aquele', 'aquela', 'esse', 'essa']);
 
 export function cleanProduct(product: string | null): string | null {
-  const trimmed = product?.trim();
+  const trimmed = cleanText(product);
 
   if (!trimmed) return null;
 
@@ -172,6 +186,7 @@ export function emptyDraft(transcript: string, today: string): ActivityDraft {
     occurred_at: today,
     cost: null,
     currency: null,
+    crop: null,
     confidence: 0,
     missing_fields: ['activity_type'],
     raw_transcript: transcript
@@ -195,7 +210,10 @@ const BLANK_ACTIVITY: ExtractedActivity = {
   field_name: null,
   occurred_at: null,
   cost: null,
-  currency: null
+  currency: null,
+  unit_price: null,
+  price_unit: null,
+  crop: null
 };
 
 export function buildDraft(
@@ -206,7 +224,20 @@ export function buildDraft(
     context.fields.find((field) => field.id === context.preselectedFieldId) ??
     null;
 
-  const field = matchField(activity.field_name, context.fields) ?? preselected;
+  const spokenField = cleanText(activity.field_name);
+  const field = matchField(spokenField, context.fields) ?? preselected;
+  const quantity = activity.quantity || null;
+  const unit = normalizeUnit(activity.unit);
+
+  // Total dito vale; sem ele, a conta pelo preço por unidade ("100 reais o litro").
+  const cost =
+    activity.cost ||
+    custoPeloPreco({
+      quantidade: quantity,
+      unidade: unit,
+      precoPorUnidade: activity.unit_price ?? null,
+      unidadeDoPreco: normalizeUnit(activity.price_unit ?? null)
+    });
 
   // Data não dita, inválida ou no futuro: assume hoje. O produtor revisa na confirmação.
   const occurredAt =
@@ -216,17 +247,23 @@ export function buildDraft(
       ? activity.occurred_at
       : context.today;
 
+  const crop = cleanText(activity.crop)?.toLowerCase() ?? null;
+  // No plantio e na colheita o produto é a própria cultura ("plantei milho").
+  const sameAsCrop = activity.activity_type === 'plantio' || activity.activity_type === 'colheita';
+
   const draft: ActivityDraft = {
     activity_type: activity.activity_type,
-    product: cleanProduct(activity.product),
+    product: cleanProduct(activity.product) ?? (sameAsCrop ? crop : null),
     // A IA às vezes devolve 0 ou "" para o que não foi dito.
-    quantity: activity.quantity || null,
-    unit: normalizeUnit(activity.unit),
+    quantity,
+    unit,
     field_id: field?.id ?? null,
-    field_name: field?.name ?? (activity.field_name?.trim() || null),
+    field_name: field?.name ?? spokenField,
     occurred_at: occurredAt,
-    cost: activity.cost,
-    currency: activity.cost !== null ? activity.currency || 'BRL' : null,
+    cost: cost ?? null,
+    currency: cost ? activity.currency || 'BRL' : null,
+    // Cultura dita na fala; sem ela, a do talhão cadastrado.
+    crop: crop ?? field?.crop ?? null,
     confidence: Math.min(1, Math.max(0, context.confidence)),
     raw_transcript: context.transcript
   };

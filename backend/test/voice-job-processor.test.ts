@@ -58,7 +58,10 @@ const APLICACAO: ExtractedActivity = {
   field_name: 'Talhão 2',
   occurred_at: '2026-10-24',
   cost: null,
-  currency: null
+  currency: null,
+  unit_price: null,
+  price_unit: null,
+  crop: null
 };
 
 function extraction(overrides: Partial<Extraction> = {}): Extraction {

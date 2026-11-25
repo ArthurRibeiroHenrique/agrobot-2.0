@@ -343,5 +343,29 @@
       "quantity": 80,
       "unit": "sc"
     }
+  },
+  {
+    "id": "custo-pelo-preco-por-litro",
+    "transcript": "Feita aplicação de fungicida no feijão, foi feito Fusão no valor de 100 reais o litro, foi um litro e duzentos. E também o adubo foliar, no valor de 400 reais o litro, foi 250 ml.",
+    "today": "2026-11-23",
+    "fields": ["Talhão 1", "Talhão 2", "Baixada"],
+    "expected": [
+      {
+        "intent": "registro",
+        "activity_count": 2,
+        "activity_type": "aplicacao",
+        "product": "Fusão",
+        "quantity": 1.2,
+        "unit": "L",
+        "cost": 120,
+        "crop": "feijão"
+      },
+      {
+        "product": "adubo foliar",
+        "quantity": 250,
+        "unit": "mL",
+        "cost": 100
+      }
+    ]
   }
 ]

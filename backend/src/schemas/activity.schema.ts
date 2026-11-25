@@ -62,7 +62,12 @@ export const extractedActivitySchema = z.object({
   field_name: z.string().nullable(),
   occurred_at: z.string().nullable(),
   cost: z.number().nullable(),
-  currency: z.string().nullable()
+  currency: z.string().nullable(),
+  // Preço por unidade dito na fala ("100 reais o litro"); o custo é calculado no backend.
+  unit_price: z.number().nullable(),
+  price_unit: z.string().nullable(),
+  // Cultura ou criação a que o serviço se refere (milho, soja, feijão, gado).
+  crop: z.string().nullable()
 });
 
 export type ExtractedActivity = z.infer<typeof extractedActivitySchema>;
@@ -91,6 +96,7 @@ export const activityDraftSchema = z
     occurred_at: dateOrNull.optional(),
     cost: numericOrNull.optional(),
     currency: z.string().nullable().optional(),
+    crop: z.string().trim().max(100).nullable().optional(),
     withholding_days: withholdingDaysOrNull.optional(),
     confidence: z.coerce.number().min(0).max(1).optional(),
     missing_fields: z.array(z.string()).optional(),
@@ -116,6 +122,7 @@ export const activityUpdateSchema = z.object({
   field_name: textOrNull.optional(),
   occurred_at: dateOrNull.optional(),
   cost: numericOrNull.optional(),
+  crop: textOrNull.optional(),
   withholding_days: withholdingDaysOrNull.optional()
 });
 
