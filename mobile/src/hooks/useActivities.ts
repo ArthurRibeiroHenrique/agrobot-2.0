@@ -81,6 +81,7 @@ export type AlteracaoDeAtividade = Pick<
   | 'field_name'
   | 'occurred_at'
   | 'cost'
+  | 'crop'
   | 'withholding_days'
 >;
 

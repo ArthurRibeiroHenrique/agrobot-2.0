@@ -131,6 +131,7 @@ export default function ConfirmDraftScreen() {
           field_name: form.talhaoNome.trim() || null,
           occurred_at: datas[indice],
           cost: lerNumero(form.custo),
+          crop: form.cultura.trim().toLowerCase() || null,
           withholding_days: carencias[indice] ?? null
         }))
       );

@@ -68,6 +68,7 @@ export default function EditActivityScreen() {
         field_name: form.talhaoNome.trim() || null,
         occurred_at: data,
         cost: lerNumero(form.custo),
+        crop: form.cultura.trim().toLowerCase() || null,
         withholding_days: carencia
       });
 

@@ -70,6 +70,24 @@ export function rotuloDoTipo(tipo: string | null | undefined): string {
   );
 }
 
+// Texto que a IA às vezes grava no lugar do vazio ("null", "/null", "0") não aparece na tela.
+const TEXTOS_VAZIOS = new Set(['null', 'undefined', 'none', 'nenhum', 'nenhuma', 'nao informado', '0']);
+
+export function textoUtil(texto: string | null | undefined): string | null {
+  const limpo = texto?.trim();
+
+  if (!limpo) return null;
+
+  const chave = limpo
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+  return !chave || TEXTOS_VAZIOS.has(chave) ? null : limpo;
+}
+
 export function iconeDoTipo(tipo: string | null | undefined): string {
   return (
     TIPOS_DE_ATIVIDADE.find((item) => item.valor === tipo)?.icone ?? 'ellipsis-horizontal-circle'

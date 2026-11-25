@@ -12,6 +12,8 @@ export type Activity = {
   currency: string | null;
   // Dias de carência da bula (só em aplicação de defensivo).
   withholding_days: number | null;
+  // Cultura ou criação a que o registro se refere (milho, soja, gado).
+  crop: string | null;
   raw_transcript: string | null;
   created_at: string;
 };
@@ -27,6 +29,7 @@ export type ActivityDraft = {
   cost: number | null;
   currency: string | null;
   withholding_days?: number | null;
+  crop?: string | null;
   confidence?: number;
   missing_fields?: string[];
   raw_transcript?: string;
