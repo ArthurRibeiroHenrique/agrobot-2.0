@@ -209,6 +209,10 @@ describe('detalhes e edição de registro', () => {
   });
 });
 
+// Começo de arquivos de áudio de verdade: o backend confere o conteúdo, não só o nome.
+const M4A = Buffer.concat([Buffer.from([0, 0, 0, 0x20]), Buffer.from('ftypM4A isom')]);
+const OGG = Buffer.concat([Buffer.from('OggS'), Buffer.alloc(12)]);
+
 describe('POST /v1/voice-jobs', () => {
   it('retorna 400 sem arquivo de áudio', async () => {
     const res = await request(app).post('/v1/voice-jobs').set(auth);
@@ -228,7 +232,7 @@ describe('POST /v1/voice-jobs', () => {
     const res = await request(app)
       .post('/v1/voice-jobs')
       .set(auth)
-      .attach('audio', Buffer.from('audio'), 'fala.m4a');
+      .attach('audio', M4A, 'fala.m4a');
 
     expect(res.status).toBe(202);
     expect(res.body).toEqual({ id: JOB_ID, status: 'queued' });
@@ -242,7 +246,17 @@ describe('POST /v1/voice-jobs', () => {
     const res = await request(app)
       .post('/v1/voice-jobs')
       .set(auth)
-      .attach('audio', Buffer.from('audio'), 'fala.amr');
+      .attach('audio', M4A, 'fala.amr');
+
+    expect(res.status).toBe(400);
+    expect(mocks.uploadAudio).not.toHaveBeenCalled();
+  });
+
+  it('recusa arquivo que não é áudio, mesmo com nome .m4a', async () => {
+    const res = await request(app)
+      .post('/v1/voice-jobs')
+      .set(auth)
+      .attach('audio', Buffer.from('<html><script>alert(1)</script></html>'), 'fala.m4a');
 
     expect(res.status).toBe(400);
     expect(mocks.uploadAudio).not.toHaveBeenCalled();
@@ -259,7 +273,7 @@ describe('POST /v1/voice-jobs', () => {
     const res = await request(app)
       .post('/v1/voice-jobs')
       .set(auth)
-      .attach('audio', Buffer.from('audio'), 'PTT-20261024-WA0001.opus');
+      .attach('audio', OGG, 'PTT-20261024-WA0001.opus');
 
     expect(res.status).toBe(202);
     expect(mocks.enqueueVoiceJob).toHaveBeenCalledWith(JOB_ID);
@@ -277,7 +291,7 @@ describe('POST /v1/voice-jobs', () => {
       .post('/v1/voice-jobs')
       .set(auth)
       .field('recorded_at', '2026-10-20T17:00:00.000-03:00')
-      .attach('audio', Buffer.from('audio'), 'fala.m4a');
+      .attach('audio', M4A, 'fala.m4a');
 
     expect(res.status).toBe(202);
     expect(mocks.createVoiceJob).toHaveBeenCalledWith(
@@ -292,7 +306,7 @@ describe('POST /v1/voice-jobs', () => {
       .post('/v1/voice-jobs')
       .set(auth)
       .field('recorded_at', 'ontem')
-      .attach('audio', Buffer.from('audio'), 'fala.m4a');
+      .attach('audio', M4A, 'fala.m4a');
 
     expect(res.status).toBe(400);
     expect(mocks.uploadAudio).not.toHaveBeenCalled();
@@ -306,7 +320,7 @@ describe('POST /v1/voice-jobs', () => {
       .post('/v1/voice-jobs')
       .set(auth)
       .field('client_id', clientId)
-      .attach('audio', Buffer.from('audio'), 'fala.m4a');
+      .attach('audio', M4A, 'fala.m4a');
 
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(JOB_ID);

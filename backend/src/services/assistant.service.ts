@@ -165,7 +165,7 @@ export async function answerQuestion(
   question: string,
   context: AssistantContext
 ): Promise<AssistantReply> {
-  const completion = await openai.beta.chat.completions.parse({
+  const completion = await openai.chat.completions.parse({
     model: aiModels.llm,
     reasoning_effort: 'low',
     response_format: zodResponseFormat(assistantAnswerSchema, 'resposta_assistente'),

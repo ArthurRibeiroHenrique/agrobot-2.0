@@ -2,13 +2,12 @@ import crypto from 'crypto';
 
 import { supabaseAdmin } from '../lib/supabase';
 import { env } from '../config/env';
-import { normalizeAudioExtension } from '../utils/audio-format';
+import { audioContentType, normalizeAudioExtension } from '../utils/audio-format';
 
 export async function uploadAudio(input: {
   userId: string;
   buffer: Buffer;
   originalName: string;
-  mimeType: string;
 }): Promise<string> {
   const ext = normalizeAudioExtension(input.originalName) ?? '.m4a';
   const storagePath = `${input.userId}/${crypto.randomUUID()}${ext}`;
@@ -16,7 +15,7 @@ export async function uploadAudio(input: {
   const { error } = await supabaseAdmin.storage
     .from(env.SUPABASE_AUDIO_BUCKET)
     .upload(storagePath, input.buffer, {
-      contentType: input.mimeType,
+      contentType: audioContentType(ext),
       upsert: false
     });
 

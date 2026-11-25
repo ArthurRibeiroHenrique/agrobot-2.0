@@ -66,7 +66,7 @@ export async function extractActivityFromTranscript(
   transcript: string,
   context: ExtractionContext
 ): Promise<Extraction> {
-  const completion = await openai.beta.chat.completions.parse({
+  const completion = await openai.chat.completions.parse({
     model: aiModels.llm,
     // Modelos de raciocínio não aceitam temperature; esforço baixo reduz custo e espera.
     reasoning_effort: 'low',
