@@ -3,7 +3,7 @@
     "name": "AgroBot 2.0",
     "slug": "agrobot-2",
     "scheme": "agrobot",
-    "version": "1.0.12",
+    "version": "1.0.13",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
@@ -16,7 +16,7 @@
     ],
     "android": {
       "package": "com.agrobot.app",
-      "versionCode": 13,
+      "versionCode": 14,
       "allowBackup": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",
