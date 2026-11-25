@@ -16,6 +16,11 @@ export default function HomeScreen() {
 
   return (
     <Tela>
+      {/* Resumo da roça no topo; o aviso de carência logo abaixo, antes do botão de falar. */}
+      <ResumoNaInicio />
+
+      <ResumoDaCarencia />
+
       <Titulo>O que você fez hoje?</Titulo>
       <Paragrafo>
         Toque no botão e fale. Conte o que fez, como “Passei vinte litros de herbicida no talhão
@@ -29,11 +34,7 @@ export default function HomeScreen() {
 
       <View style={styles.espaco} />
 
-      <ResumoDaCarencia />
-
       <FilaDeGravacoes />
-
-      <ResumoNaInicio />
 
       {erro ? <Erro>{mensagemDeErro(erro)}</Erro> : null}
       {!carregando && !erro ? (

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { LinhaComBarra } from '../components/resumo/LinhaComBarra';
 import { Erro, Paragrafo, Tela, Titulo } from '../components/ui/Tela';
 import { useResumo } from '../hooks/useActivities';
 import { cores } from '../lib/constants';
@@ -178,36 +179,6 @@ function Secao({
   );
 }
 
-function LinhaComBarra({
-  icone,
-  rotulo,
-  valor,
-  proporcao,
-  seta = false
-}: {
-  icone: NomeDoIcone;
-  rotulo: string;
-  valor: string;
-  proporcao: number;
-  seta?: boolean;
-}) {
-  return (
-    <View style={styles.linha}>
-      <View style={styles.linhaTopo}>
-        <Ionicons name={icone} size={22} color={cores.primariaEscura} />
-        <Text style={styles.linhaRotulo} numberOfLines={2}>
-          {rotulo}
-        </Text>
-        <Text style={styles.linhaValor}>{valor}</Text>
-        {seta ? <Ionicons name="chevron-forward" size={20} color={cores.textoSuave} /> : null}
-      </View>
-      <View style={styles.trilho}>
-        <View style={[styles.barra, { width: `${Math.max(4, Math.round(proporcao * 100))}%` }]} />
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   centro: {
     flex: 1,
@@ -260,39 +231,6 @@ const styles = StyleSheet.create({
   },
   pressionado: {
     backgroundColor: cores.destaque
-  },
-  linha: {
-    paddingVertical: 8
-  },
-  linhaTopo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6
-  },
-  linhaRotulo: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    color: cores.texto
-  },
-  linhaValor: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: cores.primariaEscura
-  },
-  trilho: {
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: cores.fundo,
-    borderWidth: 1,
-    borderColor: cores.borda,
-    overflow: 'hidden'
-  },
-  barra: {
-    height: '100%',
-    backgroundColor: cores.primaria,
-    borderRadius: 7
   },
   produto: {
     paddingVertical: 10,
